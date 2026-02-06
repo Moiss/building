@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- VISTAS - building.work.alert (Alertas)                         -->
+    <!-- ============================================================= -->
+
+    <!-- Vista Form: Alerta -->
+    <record id="building_work_alert_view_form" model="ir.ui.view">
+        <field name="name">building.work.alert.form</field>
+        <field name="model">building.work.alert</field>
+        <field name="arch" type="xml">
+            <form string="Alerta de Obra">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="work_id"/>
+                            <field name="severity" widget="badge"/>
+                            <field name="alert_type"/>
+                        </group>
+                        <group>
+                            <field name="is_active"/>
+                            <field name="action_xml_id"/>
+                            <field name="action_res_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista List: Alertas -->
+    <record id="building_work_alert_view_list" model="ir.ui.view">
+        <field name="name">building.work.alert.list</field>
+        <field name="model">building.work.alert</field>
+        <field name="arch" type="xml">
+            <list string="Alertas" decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'" decoration-info="severity == 'info'">
+                <field name="severity" widget="badge" decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'" decoration-info="severity == 'info'"/>
+                <field name="alert_type"/>
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="is_active"/>
+                <field name="create_date" string="Fecha"/>
+                <button name="action_dismiss" type="object" string="Descartar" icon="fa-times" invisible="not is_active" title="Descartar alerta"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Search: Alertas -->
+    <record id="building_work_alert_view_search" model="ir.ui.view">
+        <field name="name">building.work.alert.search</field>
+        <field name="model">building.work.alert</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Alertas">
+                <field name="name"/>
+                <field name="work_id"/>
+                <separator/>
+                <filter string="Activas" name="active_alerts" domain="[('is_active', '=', True)]"/>
+                <filter string="Críticas" name="critical" domain="[('severity', '=', 'critical')]"/>
+                <filter string="Advertencias" name="warning" domain="[('severity', '=', 'warning')]"/>
+                <filter string="Información" name="info" domain="[('severity', '=', 'info')]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción: Alertas -->
+    <record id="building_work_alert_action" model="ir.actions.act_window">
+        <field name="name">Alertas</field>
+        <field name="res_model">building.work.alert</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="building_work_alert_view_search"/>
+        <field name="context">{'search_default_active_alerts': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay alertas activas
+            </p>
+            <p>
+                Las alertas se generan automáticamente cuando hay desviaciones
+                en el presupuesto o etapas pendientes de aprobación.
+            </p>
+        </field>
+    </record>
+
+</odoo>

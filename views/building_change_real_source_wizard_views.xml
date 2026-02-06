@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_building_change_real_source_wizard_form" model="ir.ui.view">
+        <field name="name">building.change.real.source.wizard.form</field>
+        <field name="model">building.change.real.source.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Asistente de Migración Financiera">
+                <sheet>
+                    <field name="account_installed" invisible="1"/>
+                    <field name="missing_config" invisible="1"/>
+                    <field name="work_id" invisible="1"/>
+
+                    <div class="alert alert-warning" role="alert" invisible="not missing_config">
+                        <i class="fa fa-exclamation-triangle" title="Advertencia"/>
+                        <field name="missing_config" readonly="1"/>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="current_source"/>
+                            <field name="new_source" widget="radio"/>
+                        </group>
+                        <group invisible="new_source == 'internal'">
+                            <field name="cutover_date" required="new_source == 'accounting'"/>
+                            <field name="migration_policy" widget="radio" required="new_source == 'accounting'" readonly="not account_installed or missing_config != False"/>
+                        </group>
+                    </group>
+
+                    <group string="Resumen de Migración" invisible="new_source != 'accounting' or migration_policy != 'migrate'">
+                        <div class="alert alert-info" role="alert" colspan="2">
+                            Se generará un asiento contable por el total de gastos históricos y se marcarán los registros internos como migrados.
+                        </div>
+                        <group>
+                            <field name="lines_to_migrate_count"/>
+                            <field name="amount_to_migrate" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <footer>
+                        <button string="Confirmar Cambio" name="action_confirm_change" type="object" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_building_change_real_source_wizard" model="ir.actions.act_window">
+        <field name="name">Cambiar Fuente de Real</field>
+        <field name="res_model">building.change.real.source.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_work_id': active_id}</field>
+    </record>
+</odoo>

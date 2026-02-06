@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- DATOS DEMO - Building Dashboard                                -->
+    <!-- ============================================================= -->
+
+    <!-- Obra Demo: Torre Altara -->
+    <record id="demo_work_torre_altara" model="building.work">
+        <field name="name">Torre Altara - Fase 1</field>
+        <field name="state">running</field>
+        <field name="budget_total">12500000.00</field>
+        <field name="amount_committed">4200000.00</field>
+        <field name="amount_paid">3800000.00</field>
+    </record>
+
+    <!-- Etapas Demo -->
+    <record id="demo_stage_01" model="building.work.stage">
+        <field name="name">Cimentación</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="state">done</field>
+        <field name="progress_pct">100</field>
+        <field name="priority">2</field>
+        <field name="sequence">1</field>
+        <field name="color">10</field>
+    </record>
+
+    <record id="demo_stage_02" model="building.work.stage">
+        <field name="name">Estructura Nivel 1-5</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="state">done</field>
+        <field name="progress_pct">100</field>
+        <field name="priority">1</field>
+        <field name="sequence">2</field>
+        <field name="color">10</field>
+    </record>
+
+    <record id="demo_stage_03" model="building.work.stage">
+        <field name="name">Estructura Nivel 6-10</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="state">in_progress</field>
+        <field name="progress_pct">65</field>
+        <field name="priority">2</field>
+        <field name="sequence">3</field>
+        <field name="color">4</field>
+    </record>
+
+    <record id="demo_stage_04" model="building.work.stage">
+        <field name="name">Instalaciones Eléctricas</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="state">in_progress</field>
+        <field name="progress_pct">30</field>
+        <field name="priority">1</field>
+        <field name="sequence">4</field>
+        <field name="color">3</field>
+    </record>
+
+    <record id="demo_stage_05" model="building.work.stage">
+        <field name="name">Acabados Interiores</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="state">to_approve</field>
+        <field name="progress_pct">0</field>
+        <field name="priority">0</field>
+        <field name="sequence">5</field>
+        <field name="color">2</field>
+    </record>
+
+    <record id="demo_stage_06" model="building.work.stage">
+        <field name="name">Fachada</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="state">planning</field>
+        <field name="progress_pct">0</field>
+        <field name="priority">0</field>
+        <field name="sequence">6</field>
+        <field name="color">1</field>
+    </record>
+
+    <!-- Alertas Demo -->
+    <record id="demo_alert_01" model="building.work.alert">
+        <field name="name">Desviación en partida Acero: +15% sobre estimado</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="severity">warning</field>
+        <field name="alert_type">deviation</field>
+        <field name="is_active">True</field>
+    </record>
+
+    <record id="demo_alert_02" model="building.work.alert">
+        <field name="name">2 órdenes de compra pendientes de autorización</field>
+        <field name="work_id" ref="demo_work_torre_altara"/>
+        <field name="severity">warning</field>
+        <field name="alert_type">approval</field>
+        <field name="is_active">True</field>
+    </record>
+
+</odoo>

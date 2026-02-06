@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- VISTAS - building.progress.wizard (FASE 3.2)                  -->
+    <!-- ============================================================= -->
+
+    <!-- Vista Form: Wizard Registro de Avance -->
+    <record id="building_progress_wizard_view_form" model="ir.ui.view">
+        <field name="name">building.progress.wizard.form</field>
+        <field name="model">building.progress.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Registrar Avance Físico">
+                <group>
+                    <group string="Información de la Etapa">
+                        <field name="work_name" readonly="1"/>
+                        <field name="stage_name" readonly="1"/>
+                        <field name="current_progress" widget="progressbar" readonly="1"/>
+                    </group>
+                    <group string="Registro de Avance">
+                        <field name="date" options="{'datepicker': {'maxDate': 'today'}}"/>
+                        <field name="progress_pct"/>
+                        <field name="max_progress" readonly="1" class="text-muted"/>
+                    </group>
+                </group>
+
+                <!-- Indicador visual del nuevo total -->
+                <group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Nuevo avance total:</strong>
+                        <field name="new_total" widget="progressbar" readonly="1"/>
+                    </div>
+                </group>
+
+                <group>
+                    <field name="notes" placeholder="Observaciones del avance registrado..."/>
+                </group>
+
+                <field name="stage_id" invisible="1"/>
+
+                <footer>
+                    <button name="action_confirm" type="object" string="Registrar Avance" class="btn-primary"/>
+                    <button name="action_cancel" type="object" string="Cancelar" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- VISTAS - building.stage.progress (Historial)                  -->
+    <!-- ============================================================= -->
+
+    <!-- Vista List: Registros de Avance -->
+    <record id="building_stage_progress_view_list" model="ir.ui.view">
+        <field name="name">building.stage.progress.list</field>
+        <field name="model">building.stage.progress</field>
+        <field name="arch" type="xml">
+            <list string="Registros de Avance" create="0" edit="0" decoration-muted="state == 'cancelled'">
+                <field name="date"/>
+                <field name="progress_pct" string="% Periodo"/>
+                <field name="cumulative_pct" string="% Acumulado"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="notes"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-danger="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Form: Registro de Avance (Solo lectura) -->
+    <record id="building_stage_progress_view_form" model="ir.ui.view">
+        <field name="name">building.stage.progress.form</field>
+        <field name="model">building.stage.progress</field>
+        <field name="arch" type="xml">
+            <form string="Registro de Avance" create="0" edit="0">
+                <header>
+                    <button name="action_cancel" type="object" string="Cancelar Registro" class="btn-danger" invisible="state != 'confirmed'" groups="building_dashboard.group_building_director,building_dashboard.group_building_admin"/>
+                    <button name="action_restore" type="object" string="Restaurar Registro" class="btn-success" invisible="state != 'cancelled'" groups="building_dashboard.group_building_director,building_dashboard.group_building_admin"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Información">
+                            <field name="stage_id" readonly="1"/>
+                            <field name="work_id" readonly="1"/>
+                            <field name="date" readonly="1"/>
+                        </group>
+                        <group string="Avance">
+                            <field name="progress_pct" readonly="1"/>
+                            <field name="cumulative_pct" readonly="1"/>
+                            <field name="user_id" widget="many2one_avatar_user" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- VISTA FORM DEL WIZARD -->
+    <record id="building_budget_progress_wizard_view_form" model="ir.ui.view">
+        <field name="name">building.budget.progress.wizard.form</field>
+        <field name="model">building.budget.progress.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Registrar Avance por Partida">
+                <group>
+                    <group>
+                        <field name="is_stage_editable" invisible="1"/>
+                        <field name="line_id"/>
+                        <field name="stage_id" readonly="not is_stage_editable" options="{'no_create': True}" required="1"/>
+                        <field name="date"/>
+                    </group>
+                    <group>
+                        <!-- Widget percentage removido: código usa escala 0-100, widget espera 0-1 -->
+                        <field name="current_accumulated" string="Acumulado Actual (%)"/>
+                        <field name="max_registrable" string="Máximo Registrable (%)"/>
+                        <field name="percent_period" string="Avance a Registrar (%)" autofocus="autofocus"/>
+                    </group>
+                </group>
+                <field name="notes" placeholder="Describa el trabajo realizado, ubicación, estimación, etc..."/>
+                <footer>
+                    <button string="Confirmar Avance" name="action_confirm" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- VISTA LISTA DE HISTORIAL (EMBEBIDA) -->
+    <record id="building_budget_progress_view_tree" model="ir.ui.view">
+        <field name="name">building.budget.progress.tree</field>
+        <field name="model">building.budget.progress</field>
+        <field name="arch" type="xml">
+            <list string="Historial de Avances" decoration-muted="state == 'cancelled'" editable="bottom" create="0" delete="0">
+                <field name="date" readonly="1"/>
+                <field name="user_id" readonly="1" widget="many2one_avatar_user"/>
+                <field name="percent_period" string="% Periodo" sum="Total Periodo" readonly="1"/>
+                <field name="percent_accumulated" string="% Acumulado"/>
+                <field name="notes" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-danger="state == 'cancelled'"/>
+                <button name="action_cancel" type="object" icon="fa-times-circle" string="Cancelar" invisible="state != 'confirmed'" confirm="¿Está seguro de cancelar este avance? Esto reducirá el acumulado." class="text-danger"/>
+            </list>
+        </field>
+    </record>
+
+</odoo>

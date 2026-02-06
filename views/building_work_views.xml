@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- VISTAS - building.work (Dashboard Principal de Obra)           -->
+    <!-- ============================================================= -->
+
+    <!-- Vista Form: Dashboard Principal -->
+    <record id="building_work_view_form" model="ir.ui.view">
+        <field name="name">building.work.form.dashboard</field>
+        <field name="model">building.work</field>
+        <field name="arch" type="xml">
+            <form string="Dashboard de Obra">
+                <header>
+                    <button name="action_start_execution" type="object" string="▶ Iniciar Ejecución" class="oe_highlight" invisible="state != 'planning'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,planning,running,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_budget" type="object" class="oe_stat_button" icon="fa-calculator">
+                            <span class="o_stat_text">Ver Presupuesto</span>
+                        </button>
+                        <button name="action_register_progress" type="object" class="oe_stat_button" icon="fa-tasks">
+                            <div class="o_stat_info">
+                                <field name="stage_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Etapas</span>
+                            </div>
+                        </button>
+                        <button name="action_request_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart">
+                            <span class="o_stat_text">Solicitar Compra</span>
+                        </button>
+                        <button name="action_open_ai_assistant" type="object" class="oe_stat_button" icon="fa-robot" title="Asistente IA — Configuración">
+                            <span class="o_stat_text">Asistente IA</span>
+                        </button>
+                        <button name="%(action_building_real_line)d" type="action" class="oe_stat_button" icon="fa-money" context="{'search_default_work_id': id, 'default_work_id': id}">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="amount_paid" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </span>
+                                <span class="o_stat_text">Gastos Reales</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Nombre de la Obra"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <div class="o_kanban_card_manage_section o_kanban_card_manage_pane" style="margin-bottom: 20px;">
+                        <group col="4">
+                            <div class="text-center" style="padding: 15px; background: #f8f9fa; border-radius: 8px; margin: 5px;">
+                                <h4 style="color: #495057; margin-bottom: 5px;">Presupuesto Total</h4>
+                                <h2 style="color: #0e7490; margin: 0;">
+                                    <field name="budget_total" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </h2>
+                            </div>
+                            <div class="text-center" style="padding: 15px; background: #fff3cd; border-radius: 8px; margin: 5px; position: relative;">
+                                <h4 style="color: #495057; margin-bottom: 5px;">Comprometido</h4>
+                                <h2 style="color: #856404; margin: 0;">
+                                    <field name="amount_committed" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </h2>
+                                <button name="action_view_committed" type="object" string="Ver Detalle" class="btn btn-sm btn-link" style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #856404;"/>
+                            </div>
+                            <div class="text-center" style="padding: 15px; background: #d4edda; border-radius: 8px; margin: 5px; position: relative;">
+                                <h4 style="color: #495057; margin-bottom: 5px;">Pagado</h4>
+                                <h2 style="color: #155724; margin: 0;">
+                                    <field name="amount_paid" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </h2>
+                                <button name="action_view_paid" type="object" string="Ver Detalle" class="btn btn-sm btn-link" style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #155724;"/>
+                            </div>
+                            <div class="text-center" style="padding: 15px; background: #e2e3e5; border-radius: 8px; margin: 5px; position: relative;">
+                                <h4 style="color: #495057; margin-bottom: 5px;">Disponible</h4>
+                                <h2 style="color: #383d41; margin: 0;">
+                                    <field name="amount_available" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                </h2>
+                                <button name="action_view_available" type="object" string="Ver Detalle" class="btn btn-sm btn-link" style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #383d41;"/>
+                            </div>
+                        </group>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <group col="4">
+                            <div class="text-center" style="padding: 12px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; margin: 5px;">
+                                <h5 style="color: white; margin: 0 0 5px 0; font-size: 12px;">Avance General de la Obra</h5>
+                                <h2 style="color: white; margin: 0; font-size: 28px;">
+                                    <field name="overall_progress" widget="float"/>
+%
+                                </h2>
+                                <small invisible="overall_progress != 0" style="color: rgba(255,255,255,0.8); font-size: 10px;">
+                                    Aún no se han registrado avances
+                                </small>
+                            </div>
+                        </group>
+                    </div>
+
+
+
+                    <field name="active_alert_count" invisible="1"/>
+                    <field name="consistency_warning" invisible="1"/>
+                    <div invisible="active_alert_count == 0" style="margin-bottom: 20px;">
+                        <div class="alert alert-warning" role="alert" style="background: #fff3cd; border-radius: 8px; padding: 15px;">
+                            <h5 style="margin: 0 0 10px 0;">
+                                <i class="fa fa-bell" title="Alertas"/>
+ Alertas Activas (<field name="active_alert_count" readonly="1"/>
+)
+                            </h5>
+                            <field name="alert_ids" mode="list" domain="[('is_active', '=', True)]" readonly="1">
+                                <list editable="bottom" create="0" delete="0" limit="3" decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'">
+                                    <field name="alert_emoji" string=" " readonly="1"/>
+                                    <field name="name" readonly="1"/>
+                                    <button name="action_dismiss" type="object" string="" icon="fa-times" title="Descartar"/>
+                                </list>
+                            </field>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <group col="2">
+                            <div class="text-center" style="padding: 15px; background: #d4edda; border-radius: 8px; margin: 5px;">
+                                <h5 style="color: #155724; margin-bottom: 5px;">Avance Físico</h5>
+                                <h3 style="color: #155724; margin: 0;">
+                                    <field name="overall_progress" widget="float"/>
+%
+                                </h3>
+                                <small invisible="overall_progress != 0" style="color: #155724; font-size: 10px;">
+                                    Sin movimientos registrados
+                                </small>
+                            </div>
+                            <div class="text-center" style="padding: 15px; background: #cce5ff; border-radius: 8px; margin: 5px;" invisible="consistency_warning">
+                                <h5 style="color: #004085; margin-bottom: 5px;">Avance Financiero (Comprometido + Pagado)</h5>
+                                <h3 style="color: #004085; margin: 0;">
+                                    <field name="financial_progress" widget="float"/>
+%
+                                </h3>
+                                <small invisible="financial_progress != 0" style="color: #004085; font-size: 10px;">
+                                    Sin movimientos registrados
+                                </small>
+                            </div>
+                            <div class="text-center" style="padding: 15px; background: #f8d7da; border-radius: 8px; margin: 5px;" invisible="not consistency_warning">
+                                <h5 style="color: #721c24; margin-bottom: 5px;">
+                                    Avance Financiero (Comprometido + Pagado)
+                                    <i class="fa fa-exclamation-triangle" style="color: #dc3545;" title="El gasto va más rápido que el avance físico"/>
+                                </h5>
+                                <h3 style="color: #721c24; margin: 0;">
+                                    <field name="financial_progress" widget="float"/>
+%
+                                </h3>
+                                <small style="color: #721c24; font-size: 10px;">
+                                    ⚠ El gasto va más rápido que el avance físico
+                                </small>
+                            </div>
+                        </group>
+                    </div>
+
+
+
+                    <notebook>
+
+                        <page string="Etapas / Frentes" name="stages">
+                            <field name="stage_ids" mode="kanban">
+                                <kanban default_group_by="state" class="o_kanban_mobile">
+                                    <field name="name"/>
+                                    <field name="state"/>
+                                    <field name="progress_pct"/>
+                                    <field name="responsible_id"/>
+                                    <field name="date_deadline"/>
+                                    <field name="color"/>
+                                    <field name="priority"/>
+                                    <templates>
+                                        <t t-name="card">
+                                            <field name="color" widget="color_picker"/>
+                                            <div class="oe_kanban_content">
+                                                <div class="o_kanban_record_title">
+                                                    <strong>
+                                                        <field name="name"/>
+                                                    </strong>
+                                                </div>
+                                                <div class="o_kanban_record_body">
+                                                    <field name="progress_pct" widget="progressbar" options="{'editable': true, 'max_value': 100}"/>
+                                                </div>
+                                                <div class="o_kanban_record_bottom">
+                                                    <div class="oe_kanban_bottom_left">
+                                                        <field name="priority" widget="priority"/>
+                                                    </div>
+                                                    <div class="oe_kanban_bottom_right">
+                                                        <field name="responsible_id" widget="many2one_avatar_user"/>
+                                                        <field name="date_deadline" widget="remaining_days"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
+                        </page>
+
+                        <page string="Alertas" name="alerts">
+                            <field name="active_alert_count" invisible="1"/>
+                            <div class="alert alert-warning" role="alert" invisible="active_alert_count == 0">
+                                <strong>Alertas Activas:</strong>
+                                <field name="active_alert_count" readonly="1"/>
+                            </div>
+                            <field name="alert_ids" domain="[('is_active', '=', True)]">
+                                <list editable="bottom" decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'" decoration-info="severity == 'info'">
+                                    <field name="severity" widget="badge"/>
+                                    <field name="alert_type"/>
+                                    <field name="name"/>
+                                    <field name="is_active" column_invisible="1"/>
+                                    <button name="action_dismiss" type="object" string="Descartar" icon="fa-times" title="Descartar alerta"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Presupuesto vs Real" name="budget_vs_real">
+                            <group>
+                                <group string="Configuración de Real">
+                                    <field name="real_source" widget="radio" readonly="state == 'done' or real_source != 'internal'"/>
+                                    <field name="real_cutover_date" invisible="real_source == 'internal'" readonly="1"/>
+                                    <button name="%(action_building_change_real_source_wizard)d" string="Asistente de Migración" type="action" class="btn-link" icon="fa-cogs" groups="building_dashboard.group_building_manager"/>
+                                </group>
+                                <group string="Resumen Global">
+                                    <field name="budget_total" widget="monetary"/>
+                                    <button name="%(action_building_real_line)d" string="Ver Gastos Internos" type="action" class="btn-primary" icon="fa-list" context="{'search_default_work_id': id, 'default_work_id': id}"/>
+                                </group>
+                            </group>
+
+                            <div class="alert alert-info" role="alert" invisible="real_source == 'internal'">
+                                <i class="fa fa-info-circle" title="Información"/>
+                                <strong>Fuente Contable:</strong> Los datos reales se obtienen de la contabilidad a partir de la fecha de corte.
+                            </div>
+                        </page>
+
+                        <page string="Configuración" name="config" groups="building_dashboard.group_building_admin">
+                            <group>
+                                <group string="Datos de la Obra">
+                                    <field name="company_id" readonly="1"/>
+                                </group>
+                                <group string="Estadísticas">
+                                    <field name="overall_progress" widget="progressbar"/>
+                                    <field name="stage_count"/>
+                                    <field name="active_alert_count"/>
+                                </group>
+                            </group>
+                            <separator string="Reglas Operativas (FASE 3.1)"/>
+                            <group>
+                                <group string="Configuración de Alertas">
+                                    <field name="financial_tolerance" help="Porcentaje de tolerancia para alerta de avance financiero vs físico"/>
+                                    <field name="days_without_progress" help="Días sin avance para generar alerta en etapas activas"/>
+                                </group>
+                                <group string="Anticipos">
+                                    <field name="client_advance_planned" help="Anticipo planeado del cliente para comparar con anticipos de partidas"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista List: Obras -->
+    <record id="building_work_view_list" model="ir.ui.view">
+        <field name="name">building.work.list</field>
+        <field name="model">building.work</field>
+        <field name="arch" type="xml">
+            <list string="Obras" multi_edit="1">
+                <field name="name"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="state" widget="badge" decoration-success="state == 'running'" decoration-warning="state == 'paused'" decoration-info="state == 'draft'" decoration-muted="state == 'done'"/>
+                <field name="budget_total" widget="monetary"/>
+                <field name="amount_committed" widget="monetary"/>
+                <field name="amount_paid" widget="monetary"/>
+                <field name="amount_available" widget="monetary"/>
+                <field name="stage_count"/>
+                <field name="active_alert_count" string="Alertas"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Kanban: Obras -->
+    <record id="building_work_view_kanban" model="ir.ui.view">
+        <field name="name">building.work.kanban</field>
+        <field name="model">building.work</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" default_group_by="state">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="budget_total"/>
+                <field name="amount_available"/>
+                <field name="overall_progress"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_content">
+                            <div class="o_kanban_record_title">
+                                <strong>
+                                    <field name="name"/>
+                                </strong>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div>Presupuesto: <field name="budget_total" widget="monetary"/>
+                                </div>
+                                <div>Disponible: <field name="amount_available" widget="monetary"/>
+                                </div>
+                                <field name="overall_progress" widget="progressbar"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vista Search: Obras -->
+    <record id="building_work_view_search" model="ir.ui.view">
+        <field name="name">building.work.search</field>
+        <field name="model">building.work</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Obras">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="overall_progress"/>
+                <separator/>
+                <filter string="En Ejecución" name="running" domain="[('state', '=', 'running')]"/>
+                <filter string="Pausadas" name="paused" domain="[('state', '=', 'paused')]"/>
+                <filter string="Finalizadas" name="done" domain="[('state', '=', 'done')]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción: Abrir Dashboard de Obras -->
+    <record id="building_work_action" model="ir.actions.act_window">
+        <field name="name">Obras</field>
+        <field name="res_model">building.work</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="building_work_view_search"/>
+        <field name="context">{'search_default_running': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear una nueva Obra
+            </p>
+            <p>
+                Gestione sus obras de construcción con KPIs, etapas y alertas.
+            </p>
+        </field>
+    </record>
+
+</odoo>

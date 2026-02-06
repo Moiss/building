@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- VISTAS - Presupuesto Paramétrico (building.budget)            -->
+    <!-- ============================================================= -->
+
+    <!-- Vista Form: Presupuesto Principal -->
+    <record id="building_budget_view_form" model="ir.ui.view">
+        <field name="name">building.budget.form</field>
+        <field name="model">building.budget</field>
+        <field name="arch" type="xml">
+            <form string="Presupuesto Paramétrico">
+                <header>
+                    <button name="action_validate" type="object" string="✅ Validar Presupuesto" class="btn-primary" invisible="state == 'validated'"/>
+                    <button name="action_set_draft" type="object" string="🔓 Reabrir Presupuesto" class="btn-secondary" invisible="state == 'draft'" confirm="¿Está seguro de reabrir este presupuesto? Se podrán editar las partidas nuevamente."/>
+
+                    <!-- Herramientas de Corrección (Hardening) -->
+                    <button name="action_consolidate_assigned_lines" type="object" string="🔧 Reparar Duplicados" groups="base.group_system" confirm="Esta acción unificará líneas asignadas con sus bases y eliminará duplicados. ¿Desea continuar?" class="btn-secondary"/>
+
+                    <field name="state" widget="statusbar" statusbar_visible="draft,validated"/>
+                </header>
+                <sheet>
+                    <!-- Título -->
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                        <field name="work_id" readonly="1"/>
+                    </div>
+
+                    <!-- ============================================= -->
+                    <!-- KPIs SUPERIORES (compactos)                   -->
+                    <!-- ============================================= -->
+                    <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                        <div class="text-center" style="flex: 1; padding: 10px 15px; background: #0e7490; border-radius: 6px;">
+                            <h6 style="color: white; margin: 0 0 3px 0; font-size: 11px;">Presupuesto Total</h6>
+                            <h4 style="color: white; margin: 0; font-size: 18px;">
+                                <field name="total_amount" widget="monetary"/>
+                            </h4>
+                        </div>
+                        <div class="text-center" style="flex: 1; padding: 10px 15px; background: #059669; border-radius: 6px;">
+                            <h6 style="color: white; margin: 0 0 3px 0; font-size: 11px;">Distribuido</h6>
+                            <h4 style="color: white; margin: 0; font-size: 18px;">
+                                <field name="total_distributed" widget="monetary"/>
+                            </h4>
+                        </div>
+                        <!-- Diferencia NORMAL (sin advertencia) -->
+                        <div class="text-center" style="flex: 1; padding: 10px 15px; background: #6b7280; border-radius: 6px;" invisible="has_warning">
+                            <h6 style="color: white; margin: 0 0 3px 0; font-size: 11px;">Diferencia</h6>
+                            <h4 style="color: white; margin: 0; font-size: 18px;">
+                                <field name="difference" widget="monetary"/>
+                            </h4>
+                        </div>
+                        <!-- Diferencia ADVERTENCIA (hay discrepancia) -->
+                        <div class="text-center" style="flex: 1; padding: 10px 15px; background: #dc2626; border-radius: 6px; position: relative;" invisible="not has_warning">
+                            <h6 style="color: white; margin: 0 0 3px 0; font-size: 11px;">⚠ Diferencia</h6>
+                            <h4 style="color: white; margin: 0; font-size: 18px;">
+                                <field name="difference" widget="monetary"/>
+                            </h4>
+                            <button name="action_view_difference_lines" type="object" string="🔍 Ver" class="btn btn-sm btn-link" style="position: absolute; top: 2px; right: 2px; font-size: 10px; color: white;" title="Ver partidas con diferencia"/>
+                        </div>
+                        <div class="text-center" style="flex: 1; padding: 10px 15px; background: #7c3aed; border-radius: 6px;">
+                            <h6 style="color: white; margin: 0 0 3px 0; font-size: 11px;">Duración</h6>
+                            <h4 style="color: white; margin: 0; font-size: 18px;">
+                                <field name="duration_months"/>
+ meses
+                            </h4>
+                        </div>
+                    </div>
+
+                    <!-- Campos ocultos para condiciones -->
+                    <field name="currency_id" invisible="1"/>
+                    <field name="has_warning" invisible="1"/>
+
+                    <!-- Advertencia de diferencia -->
+                    <div class="alert alert-warning" role="alert" invisible="not has_warning" style="margin-bottom: 15px; padding: 10px;">
+                        <i class="fa fa-exclamation-triangle" title="Advertencia"/>
+                        <strong>Advertencia:</strong> La suma de periodos no coincide con el importe total.
+                    </div>
+
+                    <!-- ============================================= -->
+                    <!-- BOTONES DE ACCIÓN (flujo único)               -->
+                    <!-- ============================================= -->
+                    <div style="margin-bottom: 20px; margin-top: 10px;">
+                        <button name="action_add_chapter" type="object" string="Capítulo" class="btn-secondary" icon="fa-folder-open" invisible="state == 'validated'"/>
+                        <span style="margin-left: 20px;"/>
+                        <button name="action_add_line" type="object" string="Partida" class="btn-primary" icon="fa-plus" invisible="state == 'validated'"/>
+                        <span style="margin-left: 20px;"/>
+                        <button name="action_distribute_all" type="object" string="⚙ Distribuir Todo" class="btn-secondary" icon="fa-magic" invisible="state == 'validated'"/>
+                    </div>
+
+
+
+                    <!-- ============================================= -->
+                    <!-- LISTA DE CAPÍTULOS Y PARTIDAS                 -->
+                    <!-- ============================================= -->
+                    <field name="chapter_ids" mode="list" readonly="state == 'validated'">
+                        <list editable="bottom" decoration-bf="True" create="state != 'validated'" delete="state != 'validated'">
+                            <field name="state" column_invisible="1"/>
+                            <field name="code" string="Cód" width="60px" readonly="state == 'validated'"/>
+                            <field name="name" string="Capítulo" readonly="state == 'validated'"/>
+                            <field name="total_amount" string="Total" sum="Total" width="140px"/>
+                            <field name="total_distributed" string="Distribuido" sum="Distribuido" width="140px"/>
+                            <field name="line_count" string="Partidas" width="70px"/>
+                            <button name="action_view_lines" type="object" string="" icon="fa-list" title="Ver Partidas del Capítulo"/>
+                            <button name="action_add_line" type="object" string="" icon="fa-plus" title="Agregar Partida a este Capítulo" class="text-success" invisible="state == 'validated'"/>
+                            <button name="action_distribute_chapter" type="object" string="" icon="fa-magic" title="Distribuir Capítulo" invisible="state == 'validated'"/>
+                        </list>
+                    </field>
+
+                    <!-- ============================================= -->
+                    <!-- DETALLE DE PARTIDAS (Todas las líneas)        -->
+                    <!-- ============================================= -->
+                    <separator string="Detalle de Partidas"/>
+                    <button name="action_view_lines" type="object" string="Ver Todas las Partidas" class="btn-link"/>
+
+                    <notebook>
+                        <page string="Configuración" name="config">
+                            <group>
+                                <group string="Datos Generales">
+                                    <field name="work_id" readonly="1"/>
+                                    <field name="duration_months"/>
+                                </group>
+                                <group string="Estadísticas">
+                                    <field name="chapter_count"/>
+                                    <field name="line_count"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista List: Presupuestos -->
+    <record id="building_budget_view_list" model="ir.ui.view">
+        <field name="name">building.budget.list</field>
+        <field name="model">building.budget</field>
+        <field name="arch" type="xml">
+            <list string="Presupuestos">
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="total_amount" sum="Total"/>
+                <field name="total_distributed" sum="Distribuido"/>
+                <field name="difference"/>
+                <field name="state" widget="badge" decoration-success="state == 'validated'" decoration-info="state == 'draft'"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- VISTAS - Capítulos (building.budget.chapter)                  -->
+    <!-- ============================================================= -->
+
+    <record id="building_budget_chapter_view_form" model="ir.ui.view">
+        <field name="name">building.budget.chapter.form</field>
+        <field name="model">building.budget.chapter</field>
+        <field name="arch" type="xml">
+            <form string="Capítulo">
+                <sheet>
+                    <!-- Datos del Capítulo -->
+                    <group>
+                        <group string="Datos del Capítulo">
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group string="Totales (automáticos)">
+                            <field name="budget_id" readonly="1"/>
+                            <field name="total_amount" readonly="1"/>
+                            <field name="total_distributed" readonly="1"/>
+                            <field name="line_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Mensaje de ayuda UX -->
+                    <div class="alert alert-info" role="alert" style="margin: 15px 0; padding: 12px;">
+                        <i class="fa fa-info-circle" title="Información"/>
+                        <strong>Nota:</strong> Las partidas se agregan desde el Presupuesto, no desde el Capítulo.
+                        Use el botón <strong>"Agregar Partida"</strong> en la pantalla principal del presupuesto.
+                    </div>
+
+                    <!-- Partidas existentes (solo lectura) -->
+                    <separator string="Partidas de este Capítulo"/>
+                    <field name="line_ids" readonly="1">
+                        <list create="0" delete="0" edit="0">
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="amount" sum="Total"/>
+                            <field name="advance" sum="Anticipos"/>
+                            <field name="total_distributed" sum="Distribuido"/>
+                        </list>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="building_budget_chapter_view_list" model="ir.ui.view">
+        <field name="name">building.budget.chapter.list</field>
+        <field name="model">building.budget.chapter</field>
+        <field name="arch" type="xml">
+            <list string="Capítulos" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="total_amount" sum="Total"/>
+                <field name="total_distributed" sum="Distribuido"/>
+                <field name="line_count"/>
+                <field name="budget_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- VISTAS - Partidas (building.budget.line)                      -->
+    <!-- ============================================================= -->
+
+    <record id="building_budget_line_view_form" model="ir.ui.view">
+        <field name="name">building.budget.line.form</field>
+        <field name="model">building.budget.line</field>
+        <field name="arch" type="xml">
+            <form string="Partida">
+                <sheet>
+                    <!-- Alerta si hay diferencia -->
+                    <field name="has_warning" invisible="1"/>
+                    <div class="alert alert-danger" role="alert" invisible="not has_warning" style="margin-bottom: 15px;">
+                        <i class="fa fa-exclamation-triangle" title="Advertencia"/>
+                        <strong> Diferencia:</strong>
+                        <field name="difference" nolabel="1" widget="monetary"/>
+ pendiente de distribuir
+                    </div>
+
+                    <group>
+                        <group string="Datos de la Partida">
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="chapter_id"/>
+                            <field name="base_budget_line_id" options="{'no_create': True}" readonly="1" invisible="not base_budget_line_id"/>
+                            <field name="stage_id" options="{'no_create': True}"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group string="Importes">
+                            <field name="amount" widget="monetary"/>
+                            <field name="advance" widget="monetary"/>
+                            <field name="total_distributed" widget="monetary" readonly="1"/>
+                            <field name="difference" widget="monetary" readonly="1" decoration-danger="has_warning"/>
+                        </group>
+                        <group string="Financiero (Semáforo)">
+                            <field name="traffic_light" widget="badge" decoration-success="traffic_light == 'green'" decoration-warning="traffic_light == 'yellow'" decoration-danger="traffic_light == 'red'"/>
+                            <field name="consume_pct" widget="progressbar"/>
+                            <field name="real_total" widget="monetary"/>
+                            <field name="variance_amount" widget="monetary" decoration-danger="variance_amount &lt; 0"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Distribución Financiera" name="distribution">
+                            <separator string="Rango de Distribución"/>
+                            <group>
+                                <group>
+                                    <field name="duration_months" invisible="1"/>
+                                    <label for="period_from"/>
+                                    <div class="d-flex align-items-center" style="gap: 8px;">
+                                        <span style="background: #3B82F6; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 500;">M</span>
+                                        <field name="period_from" style="max-width: 60px; text-align: center;"/>
+                                        <span style="font-weight: bold; color: #6b7280; font-size: 18px;">→</span>
+                                        <span style="background: #10B981; color: white; padding: 4px 12px; border-radius: 20px; font-weight: 500;">M</span>
+                                        <field name="period_to" style="max-width: 60px; text-align: center;"/>
+                                    </div>
+                                    <div style="margin-top: 8px; padding: 8px 12px; background: #EEF2FF; border-radius: 6px; color: #4F46E5; font-size: 12px;">
+                                        <i class="fa fa-info-circle" title="Rango"/>
+                                         Ingrese los meses de inicio y fin de la distribución
+                                    </div>
+                                </group>
+                            </group>
+
+                            <!-- Botones de distribución -->
+                            <div style="margin: 20px 0; display: flex; gap: 15px; align-items: center;">
+                                <button name="action_distribute_uniform" type="object" string="✨ Distribuir Uniforme" class="btn-primary"/>
+                                <button name="action_clear_distribution" type="object" string="🗑 Limpiar" class="btn-secondary"/>
+                            </div>
+
+                            <separator string="Valores por Periodo"/>
+                            <field name="period_value_ids">
+                                <list editable="bottom">
+                                    <field name="period_number" string="M#" width="60px" optional="show"/>
+                                    <field name="period_name" readonly="1" string="Periodo" width="100px"/>
+                                    <field name="amount" string="Monto" sum="Total" width="200px"/>
+                                </list>
+                            </field>
+
+                            <!-- Totales con mejor estilo -->
+                            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <group>
+                                    <group>
+                                        <field name="total_distributed" readonly="1" widget="monetary" string="Total Distribuido"/>
+                                        <field name="difference" readonly="1" widget="monetary" decoration-danger="has_warning" string="Diferencia"/>
+                                    </group>
+                                </group>
+                            </div>
+                        </page>
+
+                        <page string="Avance Físico" name="progress">
+                            <group>
+                                <group>
+                                    <field name="physical_progress" widget="progressbar"/>
+                                    <field name="last_progress_date"/>
+                                    <field name="last_progress_user_id"/>
+                                </group>
+                                <group>
+                                    <button name="action_register_progress" string="Registrar Avance" type="object" class="btn-primary" icon="fa-check-circle"/>
+                                </group>
+                            </group>
+
+                            <field name="progress_ids">
+                                <list decoration-muted="state == 'cancelled'" editable="bottom" create="0" delete="0">
+                                    <field name="date" readonly="1"/>
+                                    <field name="user_id" readonly="1" widget="many2one_avatar_user"/>
+                                    <field name="percent_period" string="% Periodo" sum="Total Periodo" readonly="1"/>
+                                    <field name="percent_accumulated" string="% Acumulado"/>
+                                    <field name="notes" optional="show"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-danger="state == 'cancelled'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button string="Guardar" special="save" data-hotkey="q" class="btn-primary"/>
+                    <button name="action_save_and_distribute" type="object" string="Guardar y Distribuir" class="btn-secondary" data-hotkey="d"/>
+                    <button string="Descartar" special="cancel" data-hotkey="x" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- NOTA: Vista de distribución eliminada - usar building_budget_line_view_form que tiene el mismo diseño -->
+
+    <record id="building_budget_line_view_list" model="ir.ui.view">
+        <field name="name">building.budget.line.list</field>
+        <field name="model">building.budget.line</field>
+        <field name="arch" type="xml">
+            <list string="Partidas" decoration-warning="has_warning" delete="1" create="0">
+                <field name="chapter_code" optional="show" width="50px"/>
+                <field name="code" width="60px"/>
+                <field name="name"/>
+                <field name="traffic_light" widget="badge" decoration-success="traffic_light == 'green'" decoration-warning="traffic_light == 'yellow'" decoration-danger="traffic_light == 'red'" string="Semáforo"/>
+                <field name="amount" sum="Total" width="140px"/>
+                <field name="real_total" sum="Total Real" width="140px" optional="show"/>
+                <field name="variance_amount" width="110px" optional="show"/>
+                <field name="consume_pct" widget="progressbar" string="% Consumo" width="100px"/>
+                <field name="amount_undistributed" sum="Por Distribuir" width="120px" optional="show" decoration-danger="amount_undistributed != 0"/>
+                <field name="advance" sum="Anticipos" width="120px" optional="hide"/>
+                <field name="total_distributed" sum="Distribuido" width="140px" optional="hide"/>
+                <field name="difference" width="110px" optional="hide"/>
+                <field name="physical_progress" widget="progressbar" string="% Físico" width="80px" optional="hide"/>
+                <field name="executed_amount" sum="Ejecutado (Físico)" width="120px" optional="hide"/>
+                <field name="last_progress_date" optional="hide"/>
+                <field name="stage_id" width="100px"/>
+                <field name="has_warning" column_invisible="1"/>
+                <button name="action_register_progress" type="object" string="" icon="fa-check-circle" title="Registrar Avance"/>
+                <button name="action_distribute_uniform" type="object" string="" icon="fa-magic" title="Distribuir"/>
+                <button name="action_open_distribution" type="object" string="" icon="fa-calendar" title="Periodos"/>
+                <field name="chapter_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- VISTAS - Valores por Periodo                                  -->
+    <!-- ============================================================= -->
+
+    <record id="building_budget_period_value_view_list" model="ir.ui.view">
+        <field name="name">building.budget.period.value.list</field>
+        <field name="model">building.budget.period.value</field>
+        <field name="arch" type="xml">
+            <list string="Distribución por Periodo" editable="bottom">
+                <!-- Header button for redistribution -->
+                <header>
+                    <button name="action_redistribute" type="object" string="Redistribuir" icon="fa-magic" class="btn-primary"/>
+                </header>
+                <field name="period_number" string="# Periodo" optional="hide"/>
+                <field name="period_name" readonly="1" string="Periodo"/>
+                <field name="amount" string="Monto" sum="Total" width="200px"/>
+                <field name="line_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view for period value popup with action buttons -->
+    <record id="building_budget_period_value_view_form_popup" model="ir.ui.view">
+        <field name="name">building.budget.period.value.form.popup</field>
+        <field name="model">building.budget.period.value</field>
+        <field name="arch" type="xml">
+            <form string="Valor del Periodo">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="period_number"/>
+                            <field name="period_name" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="amount"/>
+                        </group>
+                    </group>
+                    <field name="line_id" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- ACCIONES                                                      -->
+    <!-- ============================================================= -->
+
+    <record id="building_budget_action" model="ir.actions.act_window">
+        <field name="name">Presupuestos</field>
+        <field name="res_model">building.budget</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear un nuevo presupuesto
+            </p>
+        </field>
+    </record>
+
+    <record id="building_budget_line_action" model="ir.actions.act_window">
+        <field name="name">Partidas de Presupuesto</field>
+        <field name="res_model">building.budget.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="building_budget_line_view_list"/>
+    </record>
+
+    <!-- Acción para abrir formulario de partida como popup -->
+    <record id="building_budget_line_action_popup" model="ir.actions.act_window">
+        <field name="name">Nueva Partida</field>
+        <field name="res_model">building.budget.line</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="building_budget_line_view_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ============================================================= -->
+    <!-- VISTA RESUMEN PARA DIRECCIÓN                                  -->
+    <!-- ============================================================= -->
+
+    <!-- Vista lista de resumen por capítulo (solo lectura) -->
+    <record id="building_budget_chapter_summary_view_list" model="ir.ui.view">
+        <field name="name">building.budget.chapter.summary.list</field>
+        <field name="model">building.budget.chapter</field>
+        <field name="arch" type="xml">
+            <list string="Resumen de Presupuesto" create="0" edit="0" delete="0">
+                <field name="code" string="Código"/>
+                <field name="name" string="Capítulo"/>
+                <field name="total_amount" string="Presupuesto Total" sum="Total"/>
+                <field name="total_advance" string="Anticipo Requerido" sum="Total Anticipos"/>
+                <field name="total_distributed" string="Distribuido" sum="Total Distribuido"/>
+                <field name="budget_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Acción para ver resumen de presupuesto desde el formulario -->
+    <record id="building_budget_summary_action" model="ir.actions.act_window">
+        <field name="name">📊 Resumen para Dirección</field>
+        <field name="res_model">building.budget.chapter</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="building_budget_chapter_summary_view_list"/>
+        <field name="domain">[('budget_id', '=', active_id)]</field>
+        <field name="context">{'search_default_budget_id': active_id}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Resumen de presupuesto por capítulos
+            </p>
+        </field>
+    </record>
+
+</odoo>

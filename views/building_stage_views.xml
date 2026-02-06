@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- VISTAS - building.work.stage (Etapas / Frentes)                -->
+    <!-- ============================================================= -->
+
+    <!-- Vista Form: Etapa -->
+    <record id="building_work_stage_view_form" model="ir.ui.view">
+        <field name="name">building.work.stage.form</field>
+        <field name="model">building.work.stage</field>
+        <field name="arch" type="xml">
+            <form string="Etapa de Obra">
+                <header>
+                    <button name="action_open_chapter_loader" type="object" string="📥 Cargar desde Capítulo" class="btn-secondary" invisible="state == 'done'"/>
+                    <button name="action_cleanup_duplicates" type="object" string="🧹 Limpiar Duplicados" class="btn-secondary" invisible="state == 'done'" groups="base.group_system" confirm="¿Está seguro de eliminar partidas duplicadas (basadas en ID de Presupuesto)? Se mantendrán las que tengan avance físico o sean más recientes."/>
+
+                    <button name="action_set_planning" type="object" string="Planeación" class="btn-secondary" invisible="state == 'planning'"/>
+                    <button name="action_set_in_progress" type="object" string="En Proceso" class="btn-primary" invisible="state == 'in_progress'"/>
+                    <button name="action_set_to_approve" type="object" string="Por Aprobar" class="btn-warning" invisible="state == 'to_approve'" groups="building_dashboard.group_building_admin"/>
+                    <button name="action_set_done" type="object" string="Cerrar" class="btn-success" invisible="state == 'done'" groups="building_dashboard.group_building_admin"/>
+                    <field name="state" widget="statusbar" statusbar_visible="planning,in_progress,to_approve,done"/>
+                </header>
+                <sheet>
+                    <div name="button_box" class="oe_button_box">
+                        <button name="action_view_risky_lines" type="object" class="oe_stat_button" icon="fa-exclamation-triangle" invisible="risky_line_count == 0">
+                            <field name="risky_line_count" widget="statinfo" string="Partidas en Riesgo" help="Partidas con semáforo Amarillo o Rojo"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name" placeholder="Nombre de la etapa"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Datos Básicos">
+                            <field name="work_id"/>
+                            <field name="responsible_id"/>
+                        </group>
+                        <group string="Fechas y Planeación">
+                            <field name="date_start"/>
+                            <field name="date_deadline"/>
+                            <field name="planned_progress" widget="progressbar" readonly="1"/>
+                        </group>
+                        <group string="Financiero (Semáforo)">
+                            <field name="budget_total" widget="monetary"/>
+                            <field name="executed_total" widget="monetary"/>
+                            <field name="variance_amount" widget="monetary" decoration-danger="variance_amount &lt; 0"/>
+                            <field name="variance_amount" widget="monetary" decoration-danger="variance_amount &lt; 0"/>
+                            <field name="consume_pct" widget="progressbar" string="% Consumo"/>
+                            <field name="financial_pct" widget="percentage" groups="base.group_no_one"/>
+                            <field name="traffic_light" widget="badge" decoration-success="traffic_light == 'green'" decoration-warning="traffic_light == 'yellow'" decoration-danger="traffic_light == 'red'"/>
+                            <field name="is_over_budget" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Avance Físico">
+                            <!-- Campo readonly calculado desde registros -->
+                            <field name="progress_pct" widget="progressbar" readonly="1"/>
+                            <field name="traffic_light" widget="badge" decoration-success="traffic_light == 'green'" decoration-warning="traffic_light == 'yellow'" decoration-danger="traffic_light == 'red'" string="Semáforo Financiero"/>
+                            <field name="last_progress_date" readonly="1"/>
+                        </group>
+                        <group string="Configuración">
+                            <field name="priority" widget="priority"/>
+                            <field name="sequence"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="is_overdue" invisible="1"/>
+                        <div class="alert alert-danger" role="alert" invisible="not is_overdue">
+                            <strong>¡Atención!</strong> Esta etapa está vencida.
+                        </div>
+                    </group>
+
+                    <!-- Pestaña Avances (FASE 3.2) -->
+
+                    <notebook>
+                        <page string="Partidas Asignadas (Desglose)" name="budget_lines">
+                            <div class="alert alert-info" role="alert" invisible="not budget_line_ids">
+                                <i class="fa fa-info-circle" title="Información"/>
+                                <strong>Modo Detallado:</strong> El avance de esta etapa se calcula ponderando el avance de las siguientes partidas.
+                            </div>
+                            <div class="alert alert-warning" role="alert" invisible="budget_line_ids">
+                                <i class="fa fa-exclamation-triangle" title="Advertencia"/>
+                                <strong>Modo Manual:</strong> Sin partidas asignadas. El avance se registra manualmente en "Historial de Avances".
+                            </div>
+
+                            <field name="is_admin_or_planning" invisible="1"/>
+                            <field name="budget_line_ids" readonly="not is_admin_or_planning">
+                                <list decoration-success="physical_progress == 100" create="is_admin_or_planning" delete="is_admin_or_planning">
+                                    <field name="code" width="50px"/>
+                                    <field name="name"/>
+                                    <field name="amount" sum="Total" widget="monetary"/>
+                                    <field name="physical_progress" widget="progressbar" string="% Avance"/>
+                                    <field name="executed_amount" string="Ejecutado" sum="Total Ejecutado" widget="monetary"/>
+                                    <field name="last_progress_date"/>
+                                    <button name="action_register_progress" string="" icon="fa-check-circle" type="object" title="Registrar Avance"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Historial Global (Manual)" name="progress_history" invisible="not progress_ids and budget_line_ids">
+                            <div class="alert alert-warning" role="alert" invisible="not budget_line_ids">
+                                <i class="fa fa-exclamation-circle" title="Advertencia"/>
+                                <strong>Atención:</strong> Estos registros manuales NO se suman al avance de la etapa porque tiene partidas asignadas (Modo Detallado).
+                                El avance se calcula exclusivamente desde las partidas.
+                            </div>
+                            <field name="progress_ids" readonly="1">
+                                <list decoration-muted="state == 'cancelled'" create="0" edit="0">
+                                    <field name="date"/>
+                                    <field name="progress_pct" string="% Periodo"/>
+                                    <field name="cumulative_pct" string="% Acumulado"/>
+                                    <field name="user_id" widget="many2one_avatar_user"/>
+                                    <field name="notes"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'confirmed'" decoration-danger="state == 'cancelled'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista List: Etapas -->
+    <record id="building_work_stage_view_list" model="ir.ui.view">
+        <field name="name">building.work.stage.list</field>
+        <field name="model">building.work.stage</field>
+        <field name="arch" type="xml">
+            <list string="Etapas" editable="bottom" decoration-danger="is_overdue" default_order="sequence, id">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="state" widget="badge" decoration-info="state == 'planning'" decoration-primary="state == 'in_progress'" decoration-warning="state == 'to_approve'" decoration-success="state == 'done'"/>
+                <field name="traffic_light" widget="badge" decoration-success="traffic_light == 'green'" decoration-warning="traffic_light == 'yellow'" decoration-danger="traffic_light == 'red'" string="Semáforo"/>
+                <field name="consume_pct" widget="progressbar" string="% Consumo" optional="show"/>
+                <field name="budget_total" sum="Total Presupuesto" widget="monetary" optional="show"/>
+                <field name="executed_total" sum="Total Ejecutado" widget="monetary" optional="show"/>
+                <field name="variance_amount" sum="Total Diferencia" widget="monetary" decoration-danger="variance_amount &lt; 0" optional="show"/>
+                <field name="progress_pct" widget="progressbar" readonly="1"/>
+                <field name="responsible_id" widget="many2one_avatar_user"/>
+                <field name="date_deadline"/>
+                <field name="priority" widget="priority"/>
+                <field name="is_overdue" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista Kanban: Etapas -->
+    <record id="building_work_stage_view_kanban" model="ir.ui.view">
+        <field name="name">building.work.stage.kanban</field>
+        <field name="model">building.work.stage</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="state"/>
+                <field name="traffic_light"/>
+                <field name="financial_pct"/>
+                <field name="progress_pct"/>
+                <field name="responsible_id"/>
+                <field name="date_deadline"/>
+                <field name="color"/>
+                <field name="priority"/>
+                <field name="is_overdue"/>
+                <field name="executed_total"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <field name="color" widget="color_picker"/>
+                        <div class="oe_kanban_content">
+                            <div class="o_kanban_record_title">
+                                <strong>
+                                    <field name="name"/>
+                                </strong>
+                                <div class="float-end">
+                                    <span t-if="record.traffic_light.raw_value == 'green'" class="badge text-bg-success" title="En Presupuesto">
+                                        <i class="fa fa-usd"/>
+                                        <field name="financial_pct" widget="percentage" options="{'precision': 0}"/>
+                                    </span>
+                                    <span t-if="record.traffic_light.raw_value == 'yellow'" class="badge text-bg-warning" title="Precaución">
+                                        <i class="fa fa-usd"/>
+                                        <field name="financial_pct" widget="percentage" options="{'precision': 0}"/>
+                                    </span>
+                                    <span t-if="record.traffic_light.raw_value == 'red'" class="badge text-bg-danger" title="Excedido">
+                                        <i class="fa fa-usd"/>
+                                        <field name="financial_pct" widget="percentage" options="{'precision': 0}"/>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <field name="progress_pct" widget="progressbar" options="{'max_value': 100}"/>
+                                <div class="mt-1">
+                                    <small class="text-muted">Ejecutado: <field name="executed_total" widget="monetary"/>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    <field name="priority" widget="priority"/>
+                                    <span t-if="record.is_overdue.raw_value" class="badge text-bg-danger">Vencida</span>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <field name="responsible_id" widget="many2one_avatar_user"/>
+                                    <field name="date_deadline" widget="remaining_days"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Vista Search: Etapas -->
+    <record id="building_work_stage_view_search" model="ir.ui.view">
+        <field name="name">building.work.stage.search</field>
+        <field name="model">building.work.stage</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Etapas">
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="responsible_id"/>
+                <separator/>
+                <filter string="Planeación" name="planning" domain="[('state', '=', 'planning')]"/>
+                <filter string="En Proceso" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Por Aprobar" name="to_approve" domain="[('state', '=', 'to_approve')]"/>
+                <filter string="Cerradas" name="done" domain="[('state', '=', 'done')]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción: Etapas -->
+    <record id="building_work_stage_action" model="ir.actions.act_window">
+        <field name="name">Etapas / Frentes</field>
+        <field name="res_model">building.work.stage</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="building_work_stage_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear una nueva Etapa
+            </p>
+        </field>
+    </record>
+
+</odoo>

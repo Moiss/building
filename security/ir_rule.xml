@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- REGLAS MULTI-COMPAÑÍA - Building Dashboard                     -->
+    <!-- ============================================================= -->
+
+    <!-- Regla: Obras por compañía -->
+    <record id="building_work_company_rule" model="ir.rule">
+        <field name="name">Obras: Multi-Compañía</field>
+        <field name="model_id" ref="model_building_work"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Regla: Etapas por compañía (via obra) -->
+    <record id="building_work_stage_company_rule" model="ir.rule">
+        <field name="name">Etapas: Multi-Compañía</field>
+        <field name="model_id" ref="model_building_work_stage"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Regla: Alertas por compañía (via obra) -->
+    <record id="building_work_alert_company_rule" model="ir.rule">
+        <field name="name">Alertas: Multi-Compañía</field>
+        <field name="model_id" ref="model_building_work_alert"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+    <!-- Regla: Config IA por compañía -->
+    <record id="building_ai_config_company_rule" model="ir.rule">
+        <field name="name">Config IA: Multi-Compañía</field>
+        <field name="model_id" ref="model_building_ai_config"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+        <field name="global" eval="True"/>
+    </record>
+
+</odoo>

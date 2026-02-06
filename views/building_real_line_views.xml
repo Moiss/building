@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- VISTA LISTA -->
+    <record id="view_building_real_line_tree" model="ir.ui.view">
+        <field name="name">building.real.line.tree</field>
+        <field name="model">building.real.line</field>
+        <field name="arch" type="xml">
+            <list string="Gastos Reales" multi_edit="1" editable="bottom">
+                <field name="date"/>
+                <field name="work_id" optional="show" readonly="1"/>
+                <!-- Readonly en lista para evitar cambios accidentales de obra -->
+                <field name="stage_id" optional="show"/>
+                <field name="budget_line_id" options="{'no_create': True}" domain="[('work_id', '=', work_id), ('stage_id', '=?', stage_id)]"/>
+                <field name="name"/>
+                <field name="budget_amount" optional="show" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="amount" sum="Total"/>
+                <field name="difference" optional="show" widget="monetary" decoration-danger="difference &lt; 0" options="{'currency_field': 'currency_id'}"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="is_migrated" widget="boolean_toggle" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- VISTA FORM -->
+    <record id="view_building_real_line_form" model="ir.ui.view">
+        <field name="name">building.real.line.form</field>
+        <field name="model">building.real.line</field>
+        <field name="arch" type="xml">
+            <form string="Gasto Real">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Concepto del Gasto"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="work_id"/>
+                            <field name="stage_id"/>
+                            <field name="budget_line_id" domain="[('work_id', '=', work_id), ('stage_id', '=?', stage_id)]"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="budget_amount" widget="monetary"/>
+                            <field name="amount" widget="monetary"/>
+                            <field name="difference" widget="monetary" decoration-danger="difference &lt; 0"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Información de Migración" invisible="not is_migrated">
+                        <field name="is_migrated" readonly="1"/>
+                        <field name="migrated_move_id" readonly="1"/>
+                        <field name="migrated_on" readonly="1"/>
+                        <field name="migrated_by" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- VISTA SEARCH -->
+    <record id="view_building_real_line_search" model="ir.ui.view">
+        <field name="name">building.real.line.search</field>
+        <field name="model">building.real.line</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Gastos Reales">
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="budget_line_id"/>
+                <filter string="No Migrados" name="not_migrated" domain="[('is_migrated', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ACCIÓN -->
+    <record id="action_building_real_line" model="ir.actions.act_window">
+        <field name="name">Gastos Reales (Internos)</field>
+        <field name="res_model">building.real.line</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Registrar un nuevo gasto real interno
+            </p>
+            <p>
+                Utilice esta opción para capturar gastos manualmente cuando no provienen de contabilidad automática.
+            </p>
+        </field>
+    </record>
+
+</odoo>

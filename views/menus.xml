@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- MENÚS - Control de Obras (Odoo 19 Structure)                   -->
+    <!-- ============================================================= -->
+
+    <!-- Menú Raíz - Con action para que sea visible como app -->
+    <!-- Menú Raíz - Con action para que sea visible como app -->
+    <menuitem id="building_menu_root" name="Control de Obras" action="building_budget_action" web_icon="building_dashboard,static/description/icon.png" sequence="50"/>
+
+    <!-- Submenú: Obras (acceso directo adicional) -->
+    <menuitem id="building_menu_works" name="Obras" parent="building_menu_root" action="building_work_action" sequence="10"/>
+
+    <!-- Submenú: Etapas -->
+    <menuitem id="building_menu_stages" name="Etapas / Frentes" parent="building_menu_root" action="building_work_stage_action" sequence="20"/>
+
+    <!-- Submenú: Alertas -->
+    <menuitem id="building_menu_alerts" name="Alertas" parent="building_menu_root" action="building_work_alert_action" sequence="30"/>
+
+    <!-- Submenú: Configuración IA -->
+    <menuitem id="building_menu_config_ai" name="Configuración IA" parent="building_menu_root" action="building_ai_config_wizard_action" sequence="100"/>
+
+</odoo>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- GRUPOS DE SEGURIDAD - Building Dashboard (Odoo 19 CE)          -->
+    <!-- Nota: En Odoo 19, res.groups ya no usa category_id            -->
+    <!-- ============================================================= -->
+
+    <!-- Grupo: Contabilidad (Base) -->
+    <record id="group_building_accounting" model="res.groups">
+        <field name="name">Building / Contabilidad</field>
+        <field name="comment">
+            Acceso a información financiera de obras.
+            Puede ver KPIs, presupuestos y reportes financieros.
+        </field>
+    </record>
+
+    <!-- Grupo: Compras -->
+    <record id="group_building_purchases" model="res.groups">
+        <field name="name">Building / Compras</field>
+        <field name="implied_ids" eval="[(4, ref('group_building_accounting'))]"/>
+        <field name="comment">
+            Gestión de compras y solicitudes.
+            Puede crear solicitudes, ver proveedores y gestionar órdenes.
+        </field>
+    </record>
+
+    <!-- Grupo: Administrador de Obra -->
+    <record id="group_building_admin" model="res.groups">
+        <field name="name">Building / Administrador de Obra</field>
+        <field name="implied_ids" eval="[(4, ref('group_building_purchases'))]"/>
+        <field name="comment">
+            Administración completa de obras.
+            Puede gestionar etapas, alertas y configuración general.
+        </field>
+    </record>
+
+    <!-- Grupo: Director de Obra -->
+    <record id="group_building_director" model="res.groups">
+        <field name="name">Building / Director de Obra</field>
+        <field name="implied_ids" eval="[(4, ref('group_building_admin'))]"/>
+        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        <field name="comment">
+            Acceso total a todas las funciones del módulo.
+            Puede configurar IA, aprobar etapas y gestionar presupuestos.
+        </field>
+    </record>
+
+    <!-- Grupo: Controlador Financiero (Para Plan A) -->
+    <record id="group_building_controller" model="res.groups">
+        <field name="name">Building / Controlador Financiero</field>
+        <field name="implied_ids" eval="[(4, ref('group_building_accounting'))]"/>
+        <field name="comment">
+            Encargado de registrar gastos internos (Real Plan A).
+        </field>
+    </record>
+
+    <!-- Grupo: Gerente Financiero (Para Plan B) -->
+    <record id="group_building_manager" model="res.groups">
+        <field name="name">Building / Gerente Financiero</field>
+        <field name="implied_ids" eval="[(4, ref('group_building_controller')), (4, ref('group_building_admin'))]"/>
+        <field name="comment">
+            Gestión avanzada de finanzas: migración contable y cambio de fuente.
+        </field>
+    </record>
+
+</odoo>

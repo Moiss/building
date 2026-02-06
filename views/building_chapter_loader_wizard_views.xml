@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_building_chapter_loader_wizard_form" model="ir.ui.view">
+        <field name="name">building.chapter.loader.wizard.form</field>
+        <field name="model">building.chapter.loader.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cargar Partidas desde Capítulo">
+                <group>
+                    <field name="stage_id" readonly="1"/>
+                    <field name="work_id" invisible="1"/>
+                    <field name="budget_id" options="{'no_create': True}"/>
+                </group>
+                <group>
+                    <field name="chapter_ids" widget="many2many_tags" options="{'no_create': True}" placeholder="Seleccione capítulos..."/>
+                </group>
+                <group>
+                    <field name="reassign_mode" widget="radio"/>
+                    <!-- Removed old 'mode' field -->
+                </group>
+                <div class="text-muted" style="margin-bottom: 10px;">
+                    <i class="fa fa-info-circle"/>
+ 
+                    La asignación vinculará las partidas directamente a esta etapa. 
+                    Si selecciona "Reasignar", se moverán partidas que ya estén en otras etapas.
+                </div>
+                <footer>
+                    <button string="Cargar Partidas" name="action_load_lines" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_building_chapter_loader_wizard" model="ir.actions.act_window">
+        <field name="name">Cargar Partidas desde Capítulo</field>
+        <field name="res_model">building.chapter.loader.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
