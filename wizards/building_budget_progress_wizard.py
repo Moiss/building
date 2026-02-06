@@ -137,4 +137,4 @@ class BuildingBudgetProgressWizard(models.TransientModel):
             note=self.notes
         )
         
-        return {'type': 'ir.actions.act_window_close'}
+        return {'type': 'ir.actions.client', 'tag': 'reload'}
