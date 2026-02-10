@@ -95,44 +95,80 @@
                         </group>
                     </div>
 
-                    <!-- NUEVA SECCION: Costos Operativos (KPIs) -->
-                    <div style="margin-bottom: 15px; background: #f0f2f5; padding: 10px; border-radius: 8px;">
-                        <h5 style="margin-bottom: 10px; font-weight: bold; color: #555;">Ejecutado Operativo (Costos)</h5>
-                        <group col="4">
-                            <div class="text-center">
-                                <h6 class="text-muted">Presupuestado</h6>
-                                <h3 class="text-primary">
-                                    <field name="executed_budgeted_amount" widget="monetary"/>
-                                </h3>
+                    <!-- NUEVA SECCION: Costos Operativos (KPIs - Rediseño Profesional) -->
+                    <!-- Bloque de 3 tarjetas tipo Dashboard -->
+                    <div style="margin-top: 20px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px; font-weight: 600; color: #374151;">Ejecutado Operativo (Costos)</h4>
+                        <div class="row">
+                            <!-- Card 1: Presupuestado -->
+                            <div class="col-md-4 col-sm-12 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #eff6ff; color: #3b82f6; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-book"/>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Presupuestado Operativo</span>
+                                        <h4 class="mb-0" style="color: #111827; font-weight: 700; margin-top: 2px;">
+                                            <field name="executed_budgeted_amount" widget="monetary"/>
+                                        </h4>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <h6 class="text-muted">Adicional</h6>
-                                <h3 class="text-warning">
-                                    <field name="executed_additional_amount" widget="monetary"/>
-                                </h3>
+
+                            <!-- Card 2: Adicional -->
+                            <div class="col-md-4 col-sm-12 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #fff7ed; color: #f97316; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-wrench"/>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Gasto Adicional / Indirecto</span>
+                                        <h4 class="mb-0" style="color: #111827; font-weight: 700; margin-top: 2px;">
+                                            <field name="executed_additional_amount" widget="monetary"/>
+                                        </h4>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <h6 class="text-muted">Total Ejecutado</h6>
-                                <h3 class="text-success">
-                                    <field name="executed_total_amount" widget="monetary"/>
-                                </h3>
+
+                            <!-- Card 3: Total -->
+                            <div class="col-md-4 col-sm-12 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #ecfdf5; color: #10b981; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-money"/>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Total Ejecutado Operativo</span>
+                                        <h4 class="mb-0" style="color: #111827; font-weight: 700; margin-top: 2px;">
+                                            <field name="executed_total_amount" widget="monetary"/>
+                                        </h4>
+                                    </div>
+                                </div>
                             </div>
-                        </group>
+                        </div>
                     </div>
 
-                    <div style="margin-bottom: 15px;">
-                        <group col="4">
-                            <div class="text-center" style="padding: 12px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; margin: 5px;">
-                                <h5 style="color: white; margin: 0 0 5px 0; font-size: 12px;">Avance General de la Obra</h5>
-                                <h2 style="color: white; margin: 0; font-size: 28px;">
-                                    <field name="overall_progress" widget="float"/>
-%
-                                </h2>
-                                <small invisible="overall_progress != 0" style="color: rgba(255,255,255,0.8); font-size: 10px;">
-                                    Aún no se han registrado avances
-                                </small>
+                    <!-- SECCION: Avance General (Barra full width) -->
+                    <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 12px; padding: 20px; color: white; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 style="margin: 0; font-weight: 600; font-size: 1.1rem; color: #e0e7ff;">Avance General de la Obra</h5>
+                            <span class="badge badge-pill badge-light" style="background: rgba(255,255,255,0.2); color: white; padding: 5px 10px;">En Tiempo Real</span>
+                        </div>
+                        <div class="d-flex align-items-end">
+                            <h1 style="font-size: 3.5rem; font-weight: 800; margin: 0; line-height: 1;">
+                                <field name="overall_progress" widget="float" options="{'precision': 1}"/>
+                                <span style="font-size: 1.5rem; font-weight: 600; opacity: 0.8;">%</span>
+                            </h1>
+                            <div class="ml-3 mb-2" style="font-size: 0.9rem; opacity: 0.9;">
+                                <div invisible="overall_progress != 0">
+                                    <i class="fa fa-clock-o mr-1"/>
+ Aún no se han registrado avances físicos.
+                                </div>
+                                <div invisible="overall_progress == 0">
+                                    <i class="fa fa-chart-line mr-1"/>
+ Progreso calculado desde etapas.
+                                </div>
                             </div>
-                        </group>
+                        </div>
                     </div>
 
 
