@@ -12,3 +12,4 @@ odoo/*.pyc
 dist/
 build/
 *.egg-info/
+.agent/

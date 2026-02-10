@@ -54,3 +54,6 @@ access_building_chapter_loader_wizard_director,building.chapter.loader.wizard.di
 access_building_work_cost_user,building.work.cost.user,model_building_work_cost,group_building_accounting,1,0,0,0
 access_building_work_cost_admin,building.work.cost.admin,model_building_work_cost,group_building_admin,1,1,1,1
 access_building_work_cost_director,building.work.cost.director,model_building_work_cost,group_building_director,1,1,1,1
+access_building_work_evidence_user,building.work.evidence.user,model_building_work_evidence,group_building_accounting,1,0,0,0
+access_building_work_evidence_admin,building.work.evidence.admin,model_building_work_evidence,group_building_admin,1,1,1,1
+access_building_work_evidence_director,building.work.evidence.director,model_building_work_evidence,group_building_director,1,1,1,1

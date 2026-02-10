@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- VISTA FORM -->
+    <record id="view_building_work_evidence_form" model="ir.ui.view">
+        <field name="name">building.work.evidence.form</field>
+        <field name="model">building.work.evidence</field>
+        <field name="arch" type="xml">
+            <form string="Evidencia de Obra">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Ej: Foto avance muro planta baja"/>
+                        </h1>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="alert alert-info d-flex align-items-center mb-0" role="alert" style="height: 100%;">
+                                <div class="flex-grow-1">
+                                    <label for="evidence_type" class="fw-bold d-block mb-2"/>
+                                    <field name="evidence_type" widget="radio" options="{'horizontal': true}"/>
+                                </div>
+                                <div class="ms-3">
+                                    <span invisible="evidence_type != 'progress'" class="text-success h2 mb-0">
+                                        <i class="fa fa-check-circle" title="Avance Físico"/>
+                                    </span>
+                                    <span invisible="evidence_type != 'delivery'" class="text-primary h2 mb-0">
+                                        <i class="fa fa-truck" title="Entrega de Material"/>
+                                    </span>
+                                    <span invisible="evidence_type != 'issue'" class="text-danger h2 mb-0">
+                                        <i class="fa fa-exclamation-triangle" title="Problema / Incidencia"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="alert alert-secondary d-flex align-items-center justify-content-between mb-0" role="alert" style="height: 100%;">
+                                <div>
+                                    <label for="date" class="fw-bold d-block"/>
+                                    <field name="date" class="h5 mb-0" readonly="1"/>
+                                </div>
+                                <div class="text-end">
+                                    <span class="h2 mb-0 fw-bold">
+                                        <field name="attachment_count"/>
+                                    </span>
+                                    <div class="small">Archivos</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Ubicación en Obra">
+                            <field name="work_id"/>
+                            <field name="stage_id"/>
+                            <field name="budget_line_id" domain="[('work_id', '=', work_id), ('stage_id', '=?', stage_id)]"/>
+                        </group>
+                        <group string="Captura">
+                            <field name="captured_by"/>
+                            <field name="date"/>
+                        </group>
+                    </group>
+
+                    <separator string="Evidencia Fotográfica"/>
+                    <div class="row">
+                        <div class="col-6">
+                            <group string="ANTES">
+                                <field name="attachment_before_ids" widget="many2many_binary" nolabel="1"/>
+                            </group>
+                        </div>
+                        <div class="col-6">
+                            <group string="DESPUÉS">
+                                <field name="attachment_after_ids" widget="many2many_binary" nolabel="1"/>
+                            </group>
+                        </div>
+                    </div>
+
+                    <group string="Documentos Adicionales" class="mt-4">
+                        <div class="alert alert-info" role="alert">
+                            <i class="fa fa-info-circle me-2"/>
+                            Adjunte aquí facturas, planos u otros documentos no fotográficos.
+                        </div>
+                        <field name="attachment_ids" widget="many2many_binary"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Notas" name="notes">
+                            <field name="notes" placeholder="Contexto de la evidencia: ubicación exacta, condiciones, etc."/>
+                        </page>
+                    </notebook>
+
+                    <!-- Campos Invisibles -->
+                    <field name="gps_latitude" invisible="1"/>
+                    <field name="gps_longitude" invisible="1"/>
+                    <field name="captured_at" invisible="1"/>
+                    <field name="device_id" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    <field name="company_id" invisible="1"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- VISTA LIST -->
+    <record id="view_building_work_evidence_list" model="ir.ui.view">
+        <field name="name">building.work.evidence.list</field>
+        <field name="model">building.work.evidence</field>
+        <field name="arch" type="xml">
+            <list string="Evidencias" decoration-danger="evidence_type=='issue'" decoration-info="evidence_type=='delivery'" decoration-success="evidence_type=='progress'">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="work_id" column_invisible="context.get('default_work_id')"/>
+                <field name="stage_id" column_invisible="context.get('default_stage_id')"/>
+                <field name="evidence_type" widget="badge" decoration-success="evidence_type == 'progress'" decoration-info="evidence_type == 'delivery'" decoration-danger="evidence_type == 'issue'"/>
+                <field name="budget_line_id" optional="hide"/>
+                <field name="attachment_count" string="Archivos"/>
+                <field name="captured_by" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- VISTA SEARCH -->
+    <record id="view_building_work_evidence_search" model="ir.ui.view">
+        <field name="name">building.work.evidence.search</field>
+        <field name="model">building.work.evidence</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Evidencias">
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="stage_id"/>
+                <field name="budget_line_id"/>
+
+                <filter string="Avance Físico" name="type_progress" domain="[('evidence_type', '=', 'progress')]"/>
+                <filter string="Entrega Material" name="type_delivery" domain="[('evidence_type', '=', 'delivery')]"/>
+                <filter string="Problemas" name="type_issue" domain="[('evidence_type', '=', 'issue')]"/>
+                <separator/>
+                <filter string="Hoy" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Este Mes" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+
+                <separator/>
+                <filter string="Obra" name="group_work" context="{'group_by': 'work_id'}"/>
+                <filter string="Etapa" name="group_stage" context="{'group_by': 'stage_id'}"/>
+                <filter string="Tipo" name="group_type" context="{'group_by': 'evidence_type'}"/>
+                <filter string="Fecha" name="group_date" context="{'group_by': 'date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ACCIÓN -->
+    <record id="action_building_work_evidence" model="ir.actions.act_window">
+        <field name="name">Evidencias de Obra</field>
+        <field name="res_model">building.work.evidence</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_building_work_evidence_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Registre la primera evidencia
+            </p>
+            <p>
+                Capture fotos del avance, entregas de material o incidencias en la obra.
+            </p>
+        </field>
+    </record>
+
+</odoo>

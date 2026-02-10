@@ -326,6 +326,19 @@ class BuildingWork(models.Model):
         string='Costos Operativos'
     )
 
+    # === EVIDENCIAS (ETAPA 4.2) ===
+    evidence_ids = fields.One2many(
+        'building.work.evidence',
+        'work_id',
+        string='Evidencias'
+    )
+
+    evidence_count = fields.Integer(
+        string='# Evidencias',
+        compute='_compute_evidence_count',
+        store=False
+    )
+
     @api.depends('cost_ids', 'cost_ids.amount', 'cost_ids.cost_type')
     def _compute_cost_totals(self):
         """
@@ -370,11 +383,27 @@ class BuildingWork(models.Model):
             'type': 'ir.actions.act_window',
             'res_model': 'building.work.cost',
             'view_mode': 'list,form',
-            'domain': [('work_id', '=', self.id)],
             'context': {
                 'default_work_id': self.id,
                 'default_cost_type': 'additional',
             },
+        }
+
+    def _compute_evidence_count(self):
+        """Cuenta las evidencias de la obra."""
+        for work in self:
+            work.evidence_count = len(work.evidence_ids)
+
+    def action_view_evidences(self):
+        """Ver evidencias de la obra."""
+        self.ensure_one()
+        return {
+            'name': _('Evidencias'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.work.evidence',
+            'view_mode': 'list,form',
+            'domain': [('work_id', '=', self.id)],
+            'context': {'default_work_id': self.id},
         }
 
 

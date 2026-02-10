@@ -23,3 +23,6 @@ from . import building_stage_progress
 from . import building_budget_progress
 # Costos Operativos (FASE 4.1)
 from . import work_cost
+# Evidencias (FASE 4.2)
+from . import work_evidence
+

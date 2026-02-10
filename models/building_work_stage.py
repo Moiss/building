@@ -69,6 +69,39 @@ class BuildingWorkStage(models.Model):
         help='Gastos reales asociados a esta etapa'
     )
     
+    # === EVIDENCIAS (ETAPA 4.2) ===
+    evidence_ids = fields.One2many(
+        'building.work.evidence',
+        'stage_id',
+        string='Evidencias'
+    )
+    
+    evidence_count = fields.Integer(
+        string='# Evidencias',
+        compute='_compute_evidence_count',
+        store=False
+    )
+    
+    def _compute_evidence_count(self):
+        """Cuenta las evidencias de la etapa."""
+        for stage in self:
+            stage.evidence_count = len(stage.evidence_ids)
+
+    def action_view_evidences(self):
+        """Ver evidencias de la etapa."""
+        self.ensure_one()
+        return {
+            'name': _('Evidencias'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.work.evidence',
+            'view_mode': 'list,form',
+            'domain': [('stage_id', '=', self.id)],
+            'context': {
+                'default_work_id': self.work_id.id,
+                'default_stage_id': self.id
+            },
+        }
+    
     responsible_id = fields.Many2one(
         'res.users',
         string='Responsable',

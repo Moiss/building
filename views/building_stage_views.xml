@@ -25,6 +25,13 @@
                         <button name="action_view_risky_lines" type="object" class="oe_stat_button" icon="fa-exclamation-triangle" invisible="risky_line_count == 0">
                             <field name="risky_line_count" widget="statinfo" string="Partidas en Riesgo" help="Partidas con semáforo Amarillo o Rojo"/>
                         </button>
+                        <!-- Smart Button Evidencias (Etapa 4.2) -->
+                        <button name="action_view_evidences" type="object" class="oe_stat_button" icon="fa-camera">
+                            <div class="o_stat_info">
+                                <field name="evidence_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Evidencias</span>
+                            </div>
+                        </button>
                     </div>
                     <div class="oe_title">
                         <label for="name"/>
