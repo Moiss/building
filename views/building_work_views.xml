@@ -63,36 +63,70 @@
                         </group>
                     </group>
 
-                    <div class="o_kanban_card_manage_section o_kanban_card_manage_pane" style="margin-bottom: 20px;">
-                        <group col="4">
-                            <div class="text-center" style="padding: 15px; background: #f8f9fa; border-radius: 8px; margin: 5px;">
-                                <h4 style="color: #495057; margin-bottom: 5px;">Presupuesto Total</h4>
-                                <h2 style="color: #0e7490; margin: 0;">
-                                    <field name="budget_total" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                                </h2>
+                    <!-- SECTION: Budget KPIs (Card Style) -->
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px; font-weight: 600; color: #374151;">Presupuesto</h4>
+                        <div class="row">
+                            <!-- Budget Total -->
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); height: 100%;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #f3f4f6; color: #4b5563; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-calculator"/>
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Presupuesto Total</span>
+                                        <h4 class="mb-0" style="color: #111827; font-weight: 700;">
+                                            <field name="budget_total" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                        </h4>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-center" style="padding: 15px; background: #fff3cd; border-radius: 8px; margin: 5px; position: relative;">
-                                <h4 style="color: #495057; margin-bottom: 5px;">Comprometido</h4>
-                                <h2 style="color: #856404; margin: 0;">
-                                    <field name="amount_committed" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                                </h2>
-                                <button name="action_view_committed" type="object" string="Ver Detalle" class="btn btn-sm btn-link" style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #856404;"/>
+                            <!-- Committed -->
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; height: 100%;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #fffbeb; color: #d97706; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-lock"/>
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Comprometido</span>
+                                        <h4 class="mb-0" style="color: #111827; font-weight: 700;">
+                                            <field name="amount_committed" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                        </h4>
+                                        <button name="action_view_committed" type="object" string="Ver Detalle" class="btn btn-link p-0" style="font-size: 0.75rem; color: #d97706; text-decoration: none; position: absolute; top: 10px; right: 15px;"/>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-center" style="padding: 15px; background: #d4edda; border-radius: 8px; margin: 5px; position: relative;">
-                                <h4 style="color: #495057; margin-bottom: 5px;">Pagado</h4>
-                                <h2 style="color: #155724; margin: 0;">
-                                    <field name="amount_paid" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                                </h2>
-                                <button name="action_view_paid" type="object" string="Ver Detalle" class="btn btn-sm btn-link" style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #155724;"/>
+                            <!-- Paid -->
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; height: 100%;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #ecfdf5; color: #059669; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-check-circle"/>
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Pagado</span>
+                                        <h4 class="mb-0" style="color: #111827; font-weight: 700;">
+                                            <field name="amount_paid" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                        </h4>
+                                        <button name="action_view_paid" type="object" string="Ver Detalle" class="btn btn-link p-0" style="font-size: 0.75rem; color: #059669; text-decoration: none; position: absolute; top: 10px; right: 15px;"/>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-center" style="padding: 15px; background: #e2e3e5; border-radius: 8px; margin: 5px; position: relative;">
-                                <h4 style="color: #495057; margin-bottom: 5px;">Disponible</h4>
-                                <h2 style="color: #383d41; margin: 0;">
-                                    <field name="amount_available" widget="monetary" options="{'currency_field': 'currency_id'}"/>
-                                </h2>
-                                <button name="action_view_available" type="object" string="Ver Detalle" class="btn btn-sm btn-link" style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #383d41;"/>
+                            <!-- Available -->
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; height: 100%;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #eff6ff; color: #3b82f6; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-balance-scale"/>
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Disponible</span>
+                                        <h4 class="mb-0" style="color: #111827; font-weight: 700;">
+                                            <field name="amount_available" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                        </h4>
+                                        <button name="action_view_available" type="object" string="Ver Detalle" class="btn btn-link p-0" style="font-size: 0.75rem; color: #3b82f6; text-decoration: none; position: absolute; top: 10px; right: 15px;"/>
+                                    </div>
+                                </div>
                             </div>
-                        </group>
+                        </div>
                     </div>
 
                     <!-- NUEVA SECCION: Costos Operativos (KPIs - Rediseño Profesional) -->
@@ -148,85 +182,90 @@
                     </div>
 
                     <!-- SECCION: Avance General (Barra full width) -->
-                    <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 12px; padding: 20px; color: white; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 style="margin: 0; font-weight: 600; font-size: 1.1rem; color: #e0e7ff;">Avance General de la Obra</h5>
-                            <span class="badge badge-pill badge-light" style="background: rgba(255,255,255,0.2); color: white; padding: 5px 10px;">En Tiempo Real</span>
-                        </div>
-                        <div class="d-flex align-items-end">
-                            <h1 style="font-size: 3.5rem; font-weight: 800; margin: 0; line-height: 1;">
-                                <field name="overall_progress" widget="float" options="{'precision': 1}"/>
-                                <span style="font-size: 1.5rem; font-weight: 600; opacity: 0.8;">%</span>
-                            </h1>
-                            <div class="ml-3 mb-2" style="font-size: 0.9rem; opacity: 0.9;">
-                                <div invisible="overall_progress != 0">
-                                    <i class="fa fa-clock-o mr-1"/>
- Aún no se han registrado avances físicos.
-                                </div>
-                                <div invisible="overall_progress == 0">
-                                    <i class="fa fa-chart-line mr-1"/>
- Progreso calculado desde etapas.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
 
 
                     <field name="active_alert_count" invisible="1"/>
                     <field name="consistency_warning" invisible="1"/>
-                    <div invisible="active_alert_count == 0" style="margin-bottom: 20px;">
-                        <div class="alert alert-warning" role="alert" style="background: #fff3cd; border-radius: 8px; padding: 15px;">
-                            <h5 style="margin: 0 0 10px 0;">
-                                <i class="fa fa-bell" title="Alertas"/>
- Alertas Activas (<field name="active_alert_count" readonly="1"/>
-)
-                            </h5>
-                            <field name="alert_ids" mode="list" domain="[('is_active', '=', True)]" readonly="1">
-                                <list editable="bottom" create="0" delete="0" limit="3" decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'">
-                                    <field name="alert_emoji" string=" " readonly="1"/>
-                                    <field name="name" readonly="1"/>
-                                    <button name="action_dismiss" type="object" string="" icon="fa-times" title="Descartar"/>
-                                </list>
-                            </field>
+
+                    <!-- SECTION: Progress & Health (Card Style) -->
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px; font-weight: 600; color: #374151;">Avance y Salud del Proyecto</h4>
+                        <div class="row">
+                            <!-- Physical Progress -->
+                            <div class="col-md-6 col-sm-12 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); height: 100%;">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #f0fdf4; color: #16a34a; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-building"/>
+                                    </div>
+                                    <div style="flex-grow: 1;">
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">Avance Físico Global</span>
+                                        <div class="d-flex align-items-baseline">
+                                            <h3 class="mb-0" style="color: #111827; font-weight: 700; margin-right: 10px;">
+                                                <field name="overall_progress" widget="float"/>
+%
+                                            </h3>
+                                            <span class="text-muted" style="font-size: 0.8rem;" invisible="overall_progress != 0">
+                                                (Sin registro inicial)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Financial Progress (Conditional Styling for Alert) -->
+                            <div class="col-md-6 col-sm-12 mb-2">
+                                <div class="d-flex align-items-center" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); height: 100%; position: relative; overflow: hidden;">
+
+                                    <!-- Normal State Icon -->
+                                    <div invisible="consistency_warning" class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #eff6ff; color: #2563eb; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-line-chart"/>
+                                    </div>
+                                    <!-- Warning State Icon -->
+                                    <div invisible="not consistency_warning" class="rounded-circle d-flex align-items-center justify-content-center" style="min-width: 48px; height: 48px; background: #fef2f2; color: #dc2626; font-size: 20px; margin-right: 16px;">
+                                        <i class="fa fa-exclamation-triangle ms-1"/>
+                                    </div>
+
+                                    <div style="flex-grow: 1;">
+                                        <span class="text-muted d-block" style="font-size: 0.85rem; font-weight: 500;">
+                                            Avance Financiero
+                                            <span invisible="not consistency_warning" style="color: #dc2626; font-weight: bold; margin-left: 5px;">(Desviación Detectada)</span>
+                                        </span>
+                                        <div class="d-flex align-items-baseline">
+                                            <h3 class="mb-0" style="color: #111827; font-weight: 700; margin-right: 10px;">
+                                                <field name="financial_progress" widget="float"/>
+%
+                                            </h3>
+                                            <span invisible="not consistency_warning" style="font-size: 0.8rem; color: #dc2626;">
+                                                ⚠ Gasto > Físico
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <!-- Optional: Side border for warning -->
+                                    <div invisible="not consistency_warning" style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #dc2626;"></div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                    <div style="margin-bottom: 20px;">
-                        <group col="2">
-                            <div class="text-center" style="padding: 15px; background: #d4edda; border-radius: 8px; margin: 5px;">
-                                <h5 style="color: #155724; margin-bottom: 5px;">Avance Físico</h5>
-                                <h3 style="color: #155724; margin: 0;">
-                                    <field name="overall_progress" widget="float"/>
-%
-                                </h3>
-                                <small invisible="overall_progress != 0" style="color: #155724; font-size: 10px;">
-                                    Sin movimientos registrados
-                                </small>
-                            </div>
-                            <div class="text-center" style="padding: 15px; background: #cce5ff; border-radius: 8px; margin: 5px;" invisible="consistency_warning">
-                                <h5 style="color: #004085; margin-bottom: 5px;">Avance Financiero (Comprometido + Pagado)</h5>
-                                <h3 style="color: #004085; margin: 0;">
-                                    <field name="financial_progress" widget="float"/>
-%
-                                </h3>
-                                <small invisible="financial_progress != 0" style="color: #004085; font-size: 10px;">
-                                    Sin movimientos registrados
-                                </small>
-                            </div>
-                            <div class="text-center" style="padding: 15px; background: #f8d7da; border-radius: 8px; margin: 5px;" invisible="not consistency_warning">
-                                <h5 style="color: #721c24; margin-bottom: 5px;">
-                                    Avance Financiero (Comprometido + Pagado)
-                                    <i class="fa fa-exclamation-triangle" style="color: #dc3545;" title="El gasto va más rápido que el avance físico"/>
+
+                    <!-- Alerts Banner (Using Bootstrap alert for now, but cleaner) -->
+                    <div invisible="active_alert_count == 0" style="margin-bottom: 20px;">
+                        <div class="alert alert-warning d-flex align-items-center" role="alert" style="border-radius: 12px; border: 1px solid #fcd34d; background: #fffbeb;">
+                            <i class="fa fa-bell text-warning me-3" style="font-size: 24px; margin-right: 15px;"/>
+                            <div style="flex-grow: 1;">
+                                <h5 style="color: #92400e; margin: 0 0 5px 0; font-weight: 600;">
+                                    Alertas Activas (<field name="active_alert_count" readonly="1"/>
+)
                                 </h5>
-                                <h3 style="color: #721c24; margin: 0;">
-                                    <field name="financial_progress" widget="float"/>
-%
-                                </h3>
-                                <small style="color: #721c24; font-size: 10px;">
-                                    ⚠ El gasto va más rápido que el avance físico
-                                </small>
+                                <field name="alert_ids" mode="list" domain="[('is_active', '=', True)]" readonly="1">
+                                    <list editable="bottom" create="0" delete="0" limit="3" decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'" no_open="1">
+                                        <field name="name" readonly="1"/>
+                                    </list>
+                                </field>
                             </div>
-                        </group>
+                        </div>
                     </div>
 
 
