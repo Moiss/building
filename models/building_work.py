@@ -330,7 +330,7 @@ class BuildingWork(models.Model):
     def _compute_cost_totals(self):
         """
         Calcula totales de costos operativos usando el Motor Financiero.
-        Incluye montos por tipo y conteos separados para smart buttons.
+        Se enfoca en gastos adicionales (Etapa 4.1 Refactor).
         """
         totals = self.env['building.financial.engine'].get_cost_totals(self.ids)
         for work in self:
@@ -338,6 +338,7 @@ class BuildingWork(models.Model):
             work.executed_budgeted_amount = data.get('executed_budgeted_amount', 0.0)
             work.executed_additional_amount = data.get('executed_additional_amount', 0.0)
             work.executed_total_amount = data.get('executed_total_amount', 0.0)
+            # Solo usamos cost_count general para el smart button único
             work.cost_count = data.get('cost_count', 0)
             work.cost_budgeted_count = data.get('cost_budgeted_count', 0)
             work.cost_additional_count = data.get('cost_additional_count', 0)
@@ -350,41 +351,26 @@ class BuildingWork(models.Model):
         self._compute_cost_totals()
 
     def action_view_costs(self):
-        """Ver lista de costos operativos."""
+        """Ver lista de costos operativos (Acción genérica)."""
         self.ensure_one()
         return {
-            'name': _('Costos Operativos'),
+            'name': _('Gastos Adicionales'),
             'type': 'ir.actions.act_window',
             'res_model': 'building.work.cost',
             'view_mode': 'list,form',
             'domain': [('work_id', '=', self.id)],
-            'context': {'default_work_id': self.id},
+            'context': {'default_work_id': self.id, 'default_cost_type': 'additional'},
         }
 
-    def action_view_costs_budgeted(self):
-        """Smart button: Ver costos presupuestados de la obra."""
+    def action_view_additional_costs(self):
+        """Smart button: Ver gastos adicionales de la obra."""
         self.ensure_one()
         return {
-            'name': _('Costos Presupuestados'),
+            'name': _('Gastos Adicionales'),
             'type': 'ir.actions.act_window',
             'res_model': 'building.work.cost',
             'view_mode': 'list,form',
-            'domain': [('work_id', '=', self.id), ('cost_type', '=', 'budgeted')],
-            'context': {
-                'default_work_id': self.id,
-                'default_cost_type': 'budgeted',
-            },
-        }
-
-    def action_view_costs_additional(self):
-        """Smart button: Ver costos adicionales de la obra."""
-        self.ensure_one()
-        return {
-            'name': _('Costos Adicionales'),
-            'type': 'ir.actions.act_window',
-            'res_model': 'building.work.cost',
-            'view_mode': 'list,form',
-            'domain': [('work_id', '=', self.id), ('cost_type', '=', 'additional')],
+            'domain': [('work_id', '=', self.id)],
             'context': {
                 'default_work_id': self.id,
                 'default_cost_type': 'additional',

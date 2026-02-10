@@ -49,7 +49,7 @@ class BuildingWorkCost(models.Model):
         domain="[('work_id', '=', work_id)]",
         index=True,
         tracking=True,
-        help='Partida requerida si es costo presupuestado'
+        help='Opcional: vincule a una partida del presupuesto si este gasto corresponde a alguna'
     )
 
     date = fields.Date(
@@ -62,8 +62,8 @@ class BuildingWorkCost(models.Model):
     product_id = fields.Many2one(
         'product.product',
         string='Producto',
-        domain="[('type', 'in', ['consu', 'service'])]",
-        help='Producto opcional para referencia de costos'
+        required=True,
+        help='Producto o servicio del gasto'
     )
 
     description = fields.Text(string='Descripción Detallada')
@@ -117,11 +117,6 @@ class BuildingWorkCost(models.Model):
             record.amount = record.qty * record.unit_cost
 
     # === ONCHANGE ===
-    @api.onchange('cost_type')
-    def _onchange_cost_type(self):
-        if self.cost_type == 'additional':
-            self.budget_line_id = False
-
     @api.onchange('work_id')
     def _onchange_work_id(self):
         if self.stage_id and self.stage_id.work_id != self.work_id:
@@ -141,14 +136,6 @@ class BuildingWorkCost(models.Model):
                 self.unit_cost = self.product_id.standard_price
 
     # === CONSTRAINTS ===
-    @api.constrains('cost_type', 'budget_line_id')
-    def _check_cost_type_integrity(self):
-        for record in self:
-            if record.cost_type == 'budgeted' and not record.budget_line_id:
-                raise ValidationError(_("Los costos presupuestados deben estar ligados a una partida presupuestaria."))
-            if record.cost_type == 'additional' and record.budget_line_id:
-                raise ValidationError(_("Los costos adicionales NO deben estar ligados a una partida presupuestaria."))
-
     @api.constrains('work_id', 'stage_id', 'budget_line_id')
     def _check_scope_integrity(self):
         for record in self:
@@ -160,6 +147,8 @@ class BuildingWorkCost(models.Model):
     # === CRUD OVERRIDES (TRIGGER ENGINE) ===
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            vals['cost_type'] = 'additional'
         records = super().create(vals_list)
         records.mapped('work_id')._recompute_cost_totals()
         return records
