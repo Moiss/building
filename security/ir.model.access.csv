@@ -51,3 +51,6 @@ access_building_real_line_manager,building.real.line.manager,model_building_real
 access_building_change_real_source_wizard_manager,building.change.real.source.wizard.manager,model_building_change_real_source_wizard,group_building_manager,1,1,1,1
 access_building_chapter_loader_wizard_admin,building.chapter.loader.wizard.admin,model_building_chapter_loader_wizard,group_building_admin,1,1,1,1
 access_building_chapter_loader_wizard_director,building.chapter.loader.wizard.director,model_building_chapter_loader_wizard,group_building_director,1,1,1,1
+access_building_work_cost_user,building.work.cost.user,model_building_work_cost,group_building_accounting,1,0,0,0
+access_building_work_cost_admin,building.work.cost.admin,model_building_work_cost,group_building_admin,1,1,1,1
+access_building_work_cost_director,building.work.cost.director,model_building_work_cost,group_building_director,1,1,1,1

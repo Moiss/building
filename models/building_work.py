@@ -266,6 +266,7 @@ class BuildingWork(models.Model):
         for work in self:
             work.budget_count = len(work.budget_ids)
 
+
     @api.depends('alert_ids', 'alert_ids.is_active')
     def _compute_active_alert_count(self):
         """Cuenta las alertas activas."""
@@ -273,6 +274,74 @@ class BuildingWork(models.Model):
             work.active_alert_count = len(
                 work.alert_ids.filtered(lambda a: a.is_active)
             )
+
+    # === COSTOS OPERATIVOS (ETAPA 4.1) ===
+    executed_budgeted_amount = fields.Monetary(
+        string='Ejecutado Presupuestado',
+        currency_field='currency_id',
+        compute='_compute_cost_totals',
+        store=True,
+        help='Suma de costos operativos ligados a una partida presupuestaria'
+    )
+
+    executed_additional_amount = fields.Monetary(
+        string='Ejecutado Adicional',
+        currency_field='currency_id',
+        compute='_compute_cost_totals',
+        store=True,
+        help='Suma de costos operativos NO ligados a partida (adicionales/indirectos)'
+    )
+
+    executed_total_amount = fields.Monetary(
+        string='Ejecutado Total',
+        currency_field='currency_id',
+        compute='_compute_cost_totals',
+        store=True,
+        help='Suma total de costos operativos (Presupuestados + Adicionales)'
+    )
+
+    cost_count = fields.Integer(
+        string='# Costos',
+        compute='_compute_cost_totals',
+        store=True
+    )
+    
+    cost_ids = fields.One2many(
+        'building.work.cost',
+        'work_id',
+        string='Costos Operativos'
+    )
+
+    @api.depends('cost_ids', 'cost_ids.amount', 'cost_ids.cost_type')
+    def _compute_cost_totals(self):
+        """Calcula totales de costos usando el Motor Financiero."""
+        # Se asegura de enviar todos los IDs para cálculo en lote
+        totals = self.env['building.financial.engine'].get_cost_totals(self.ids)
+        for work in self:
+            data = totals.get(work.id, {})
+            work.executed_budgeted_amount = data.get('executed_budgeted_amount', 0.0)
+            work.executed_additional_amount = data.get('executed_additional_amount', 0.0)
+            work.executed_total_amount = data.get('executed_total_amount', 0.0)
+            work.cost_count = data.get('cost_count', 0)
+
+    def _recompute_cost_totals(self):
+        """Método helper para forzar recomputo desde cambios en building.work.cost"""
+        # Al ser store=True y tener depends de cost_ids, Odoo maneja la invalidez.
+        # Pero si queremos forzar o si usamos SQl directo, este método es útil.
+        # Por ahora, confiamos en el depends, pero dejamos el hook por si el motor cambia.
+        self._compute_cost_totals()
+
+    def action_view_costs(self):
+        """Ver lista de costos operativos."""
+        self.ensure_one()
+        return {
+            'name': _('Costos Operativos'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.work.cost',
+            'view_mode': 'list,form',
+            'domain': [('work_id', '=', self.id)],
+            'context': {'default_work_id': self.id},
+        }
 
 
 

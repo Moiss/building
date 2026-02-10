@@ -21,3 +21,5 @@ from . import building_budget_period
 from . import building_stage_progress
 # Avance por Partida (FASE 3.3)
 from . import building_budget_progress
+# Costos Operativos (FASE 4.1)
+from . import work_cost

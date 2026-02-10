@@ -31,6 +31,7 @@
                         <button name="action_open_ai_assistant" type="object" class="oe_stat_button" icon="fa-robot" title="Asistente IA — Configuración">
                             <span class="o_stat_text">Asistente IA</span>
                         </button>
+
                         <button name="%(action_building_real_line)d" type="action" class="oe_stat_button" icon="fa-money" context="{'search_default_work_id': id, 'default_work_id': id}">
                             <div class="o_stat_info">
                                 <span class="o_stat_value">
@@ -38,6 +39,10 @@
                                 </span>
                                 <span class="o_stat_text">Gastos Reales</span>
                             </div>
+                        </button>
+                        <!-- Smart Button Costos Operativos (NUEVO) -->
+                        <button name="action_view_costs" type="object" class="oe_stat_button" icon="fa-calculator">
+                            <field name="cost_count" string="Costos Op." widget="statinfo"/>
                         </button>
                     </div>
 
@@ -83,6 +88,31 @@
                                     <field name="amount_available" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                                 </h2>
                                 <button name="action_view_available" type="object" string="Ver Detalle" class="btn btn-sm btn-link" style="position: absolute; top: 5px; right: 5px; font-size: 10px; color: #383d41;"/>
+                            </div>
+                        </group>
+                    </div>
+
+                    <!-- NUEVA SECCION: Costos Operativos (KPIs) -->
+                    <div style="margin-bottom: 15px; background: #f0f2f5; padding: 10px; border-radius: 8px;">
+                        <h5 style="margin-bottom: 10px; font-weight: bold; color: #555;">Ejecutado Operativo (Costos)</h5>
+                        <group col="4">
+                            <div class="text-center">
+                                <h6 class="text-muted">Presupuestado</h6>
+                                <h3 class="text-primary">
+                                    <field name="executed_budgeted_amount" widget="monetary"/>
+                                </h3>
+                            </div>
+                            <div class="text-center">
+                                <h6 class="text-muted">Adicional</h6>
+                                <h3 class="text-warning">
+                                    <field name="executed_additional_amount" widget="monetary"/>
+                                </h3>
+                            </div>
+                            <div class="text-center">
+                                <h6 class="text-muted">Total Ejecutado</h6>
+                                <h3 class="text-success">
+                                    <field name="executed_total_amount" widget="monetary"/>
+                                </h3>
                             </div>
                         </group>
                     </div>

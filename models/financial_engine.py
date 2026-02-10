@@ -156,8 +156,71 @@ class BuildingFinancialEngine(models.AbstractModel):
         pct = (real / budget) * 100.0
         
         # Lógica estricta según requerimiento 3.3.1
+
         if pct > threshold_critical:
             return 'red'
         elif pct > threshold_warning:
             return 'yellow'
         return 'green'
+
+    @api.model
+    def get_cost_totals(self, work_ids):
+        """
+        Calcula totales de costos operativos agrupados por obra y tipo.
+        Usa read_group para máxima eficiencia.
+        Retorna: {work_id: {
+            'executed_budgeted_amount': float,
+            'executed_additional_amount': float,
+            'executed_total_amount': float,
+            'cost_count': int
+        }}
+        """
+        result = {}
+        if not work_ids:
+            return result
+
+        # Inicializar estructura
+        for work_id in work_ids:
+            result[work_id] = {
+                'executed_budgeted_amount': 0.0,
+                'executed_additional_amount': 0.0,
+                'executed_total_amount': 0.0,
+                'cost_count': 0
+            }
+
+        CostObj = self.env['building.work.cost']
+        
+        # 1. Agrupar montos por work_id + cost_type
+        domain = [('work_id', 'in', work_ids)]
+        groups = CostObj.read_group(
+            domain,
+            ['work_id', 'cost_type', 'amount'],
+            ['work_id', 'cost_type']
+        )
+
+        for g in groups:
+            w_id = g['work_id'][0]
+            c_type = g['cost_type']
+            amount = g['amount']
+            
+            if w_id in result:
+                if c_type == 'budgeted':
+                    result[w_id]['executed_budgeted_amount'] += amount
+                elif c_type == 'additional':
+                    result[w_id]['executed_additional_amount'] += amount
+                
+                result[w_id]['executed_total_amount'] += amount
+
+        # 2. Contar registros (independiente del tipo)
+        count_groups = CostObj.read_group(
+            domain,
+            ['work_id'],
+            ['work_id']
+        )
+        for g in count_groups:
+            w_id = g['work_id'][0]
+            count = g['work_id_count']
+            if w_id in result:
+                result[w_id]['cost_count'] = count
+
+        return result

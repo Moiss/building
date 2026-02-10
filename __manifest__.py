@@ -50,6 +50,7 @@ Roles soportados:
         'views/building_progress_views.xml',  # FASE 3.2: Avance Físico
         'views/building_budget_progress_views.xml',  # FASE 3.3: Avance por Partida
         'views/building_real_line_views.xml',        # FASE 3.4: Gastos Reales
+        'views/work_cost_views.xml',                 # FASE 4.1: Costos Operativos
         'views/res_config_settings_views.xml',
         'views/menus.xml',
     ],

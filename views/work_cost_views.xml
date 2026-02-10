@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_building_work_cost_form" model="ir.ui.view">
+        <field name="name">building.work.cost.form</field>
+        <field name="model">building.work.cost</field>
+        <field name="arch" type="xml">
+            <form string="Costo Operativo">
+                <header>
+                    <field name="cost_type" widget="statusbar" options="{'clickable': '0'}"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="Ej. Materiales Varios"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="main_details">
+                            <field name="date"/>
+                            <field name="work_id"/>
+                            <field name="cost_type"/>
+                        </group>
+                        <group name="financial_details">
+                            <field name="product_id"/>
+                            <field name="qty"/>
+                            <field name="uom_id"/>
+                            <field name="unit_cost"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="amount" decoration-bf="1"/>
+                        </group>
+                    </group>
+                    <group name="classification">
+                        <field name="stage_id" domain="[('work_id', '=', work_id)]"/>
+                        <field name="budget_line_id" invisible="cost_type == 'additional'" required="cost_type == 'budgeted'" domain="[('work_id', '=', work_id)]"/>
+                    </group>
+                    <group name="description">
+                        <field name="description"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_building_work_cost_list" model="ir.ui.view">
+        <field name="name">building.work.cost.list</field>
+        <field name="model">building.work.cost</field>
+        <field name="arch" type="xml">
+            <list string="Costos Operativos" decoration-info="cost_type == 'budgeted'" decoration-muted="cost_type == 'additional'">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="stage_id" optional="show"/>
+                <field name="cost_type"/>
+                <field name="budget_line_id" optional="hide"/>
+                <field name="product_id" optional="hide"/>
+                <field name="qty" optional="show"/>
+                <field name="unit_cost" optional="hide"/>
+                <field name="amount" sum="Total"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_building_work_cost_search" model="ir.ui.view">
+        <field name="name">building.work.cost.search</field>
+        <field name="model">building.work.cost</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Costos">
+                <field name="name"/>
+                <field name="work_id"/>
+                <field name="budget_line_id"/>
+                <field name="product_id"/>
+
+                <filter string="Presupuestados" name="type_budgeted" domain="[('cost_type', '=', 'budgeted')]"/>
+                <filter string="Adicionales" name="type_additional" domain="[('cost_type', '=', 'additional')]"/>
+                <separator/>
+                <filter string="Hoy" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+
+                <group expand="1" string="Agrupar Por">
+                    <filter string="Obra" name="grp_work" context="{'group_by': 'work_id'}"/>
+                    <filter string="Tipo" name="grp_type" context="{'group_by': 'cost_type'}"/>
+                    <filter string="Etapa" name="grp_stage" context="{'group_by': 'stage_id'}"/>
+                    <filter string="Fecha" name="grp_date" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_building_work_cost" model="ir.actions.act_window">
+        <field name="name">Costos de Obra</field>
+        <field name="res_model">building.work.cost</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+            Registra los costos operativos de tus obras.
+            </p>
+            <p>
+            Puedes registrar costos presupuestados (ligados a partidas) o gastos adicionales indirectos.
+            </p>
+        </field>
+    </record>
+</odoo>
