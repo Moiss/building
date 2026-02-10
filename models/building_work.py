@@ -305,6 +305,20 @@ class BuildingWork(models.Model):
         compute='_compute_cost_totals',
         store=True
     )
+
+    cost_budgeted_count = fields.Integer(
+        string='# Costos Presupuestados',
+        compute='_compute_cost_totals',
+        store=True,
+        help='Cantidad de costos operativos ligados a partida'
+    )
+
+    cost_additional_count = fields.Integer(
+        string='# Costos Adicionales',
+        compute='_compute_cost_totals',
+        store=True,
+        help='Cantidad de costos adicionales/indirectos'
+    )
     
     cost_ids = fields.One2many(
         'building.work.cost',
@@ -314,8 +328,10 @@ class BuildingWork(models.Model):
 
     @api.depends('cost_ids', 'cost_ids.amount', 'cost_ids.cost_type')
     def _compute_cost_totals(self):
-        """Calcula totales de costos usando el Motor Financiero."""
-        # Se asegura de enviar todos los IDs para cálculo en lote
+        """
+        Calcula totales de costos operativos usando el Motor Financiero.
+        Incluye montos por tipo y conteos separados para smart buttons.
+        """
         totals = self.env['building.financial.engine'].get_cost_totals(self.ids)
         for work in self:
             data = totals.get(work.id, {})
@@ -323,6 +339,8 @@ class BuildingWork(models.Model):
             work.executed_additional_amount = data.get('executed_additional_amount', 0.0)
             work.executed_total_amount = data.get('executed_total_amount', 0.0)
             work.cost_count = data.get('cost_count', 0)
+            work.cost_budgeted_count = data.get('cost_budgeted_count', 0)
+            work.cost_additional_count = data.get('cost_additional_count', 0)
 
     def _recompute_cost_totals(self):
         """Método helper para forzar recomputo desde cambios en building.work.cost"""
@@ -341,6 +359,36 @@ class BuildingWork(models.Model):
             'view_mode': 'list,form',
             'domain': [('work_id', '=', self.id)],
             'context': {'default_work_id': self.id},
+        }
+
+    def action_view_costs_budgeted(self):
+        """Smart button: Ver costos presupuestados de la obra."""
+        self.ensure_one()
+        return {
+            'name': _('Costos Presupuestados'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.work.cost',
+            'view_mode': 'list,form',
+            'domain': [('work_id', '=', self.id), ('cost_type', '=', 'budgeted')],
+            'context': {
+                'default_work_id': self.id,
+                'default_cost_type': 'budgeted',
+            },
+        }
+
+    def action_view_costs_additional(self):
+        """Smart button: Ver costos adicionales de la obra."""
+        self.ensure_one()
+        return {
+            'name': _('Costos Adicionales'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.work.cost',
+            'view_mode': 'list,form',
+            'domain': [('work_id', '=', self.id), ('cost_type', '=', 'additional')],
+            'context': {
+                'default_work_id': self.id,
+                'default_cost_type': 'additional',
+            },
         }
 
 

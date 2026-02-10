@@ -40,9 +40,19 @@
                                 <span class="o_stat_text">Gastos Reales</span>
                             </div>
                         </button>
-                        <!-- Smart Button Costos Operativos (NUEVO) -->
-                        <button name="action_view_costs" type="object" class="oe_stat_button" icon="fa-calculator">
-                            <field name="cost_count" string="Costos Op." widget="statinfo"/>
+                        <!-- Smart Button: Costos Presupuestados -->
+                        <button name="action_view_costs_budgeted" type="object" class="oe_stat_button" icon="fa-file-text-o">
+                            <div class="o_stat_info">
+                                <field name="cost_budgeted_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Presupuestados</span>
+                            </div>
+                        </button>
+                        <!-- Smart Button: Costos Adicionales -->
+                        <button name="action_view_costs_additional" type="object" class="oe_stat_button" icon="fa-wrench">
+                            <div class="o_stat_info">
+                                <field name="cost_additional_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Adicionales</span>
+                            </div>
                         </button>
                     </div>
 

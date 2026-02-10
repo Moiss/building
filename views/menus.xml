@@ -14,11 +14,7 @@
     <!-- Submenú: Etapas -->
     <menuitem id="building_menu_stages" name="Etapas / Frentes" parent="building_menu_root" action="building_work_stage_action" sequence="20"/>
 
-    <!-- Submenú: Alertas -->
-    <menuitem id="building_menu_alerts" name="Alertas" parent="building_menu_root" action="building_work_alert_action" sequence="30"/>
 
-    <!-- Submenú: Costos de Obra (FASE 4.1) -->
-    <menuitem id="building_menu_costs" name="Costos de Obra" parent="building_menu_root" action="action_building_work_cost" sequence="40"/>
 
     <!-- Submenú: Configuración IA -->
     <menuitem id="building_menu_config_ai" name="Configuración IA" parent="building_menu_root" action="building_ai_config_wizard_action" sequence="100"/>

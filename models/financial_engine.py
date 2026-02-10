@@ -63,10 +63,10 @@ class BuildingFinancialEngine(models.AbstractModel):
                  internal_domain.append(('date', '<', work.real_cutover_date))
 
         # Agrupar por budget_line_id
-        # read_group es lo más eficiente
-        groups = RealLine.read_group(internal_domain, ['budget_line_id', 'amount'], ['budget_line_id'])
+        # _read_group es lo más eficiente (Odoo 19)
+        groups = RealLine._read_group(internal_domain, groupby=['budget_line_id'], aggregates=['amount:sum'])
         
-        real_amounts_by_line = {g['budget_line_id'][0]: g['amount'] for g in groups}
+        real_amounts_by_line = {rec.id: (amount_sum or 0.0) for rec, amount_sum in groups}
         
         # 2. FUENTE CONTABLE (Plan B)
         if work.real_source == 'accounting':
@@ -93,14 +93,14 @@ class BuildingFinancialEngine(models.AbstractModel):
         stages = self.env['building.work.stage'].search(domain_stages)
         
         # 1. Calcular Presupuesto por Etapa (Suma de partidas)
-        # Eficiente: read_group sobre building.budget.line
+        # Eficiente: _read_group sobre building.budget.line
         BudgetLine = self.env['building.budget.line']
-        budget_groups = BudgetLine.read_group(
+        budget_groups = BudgetLine._read_group(
             [('work_id', '=', work_id), ('stage_id', 'in', stages.ids)],
-            ['stage_id', 'amount'],
-            ['stage_id']
+            groupby=['stage_id'],
+            aggregates=['amount:sum']
         )
-        budget_map = {g['stage_id'][0]: g['amount'] for g in budget_groups}
+        budget_map = {rec.id: (amount_sum or 0.0) for rec, amount_sum in budget_groups}
 
         # 2. Calcular Real por Etapa (Delegar a get_real_amounts)
         # Obtenemos real por partida y sumamos, O implementar get_real_amounts por stage
@@ -115,12 +115,12 @@ class BuildingFinancialEngine(models.AbstractModel):
              if work.real_cutover_date:
                  real_domain.append(('date', '<', work.real_cutover_date))
         
-        real_groups = RealLine.read_group(
+        real_groups = RealLine._read_group(
             real_domain,
-            ['stage_id', 'amount'],
-            ['stage_id']
+            groupby=['stage_id'],
+            aggregates=['amount:sum']
         )
-        real_map = {g['stage_id'][0]: g['amount'] for g in real_groups}
+        real_map = {rec.id: (amount_sum or 0.0) for rec, amount_sum in real_groups}
 
         # 3. Construir resultado
         result = {}
@@ -167,7 +167,7 @@ class BuildingFinancialEngine(models.AbstractModel):
     def get_cost_totals(self, work_ids):
         """
         Calcula totales de costos operativos agrupados por obra y tipo.
-        Usa read_group para máxima eficiencia.
+        Usa _read_group (Odoo 19) para máxima eficiencia.
         Retorna: {work_id: {
             'executed_budgeted_amount': float,
             'executed_additional_amount': float,
@@ -179,48 +179,50 @@ class BuildingFinancialEngine(models.AbstractModel):
         if not work_ids:
             return result
 
-        # Inicializar estructura
+        # Inicializar estructura para cada obra
         for work_id in work_ids:
             result[work_id] = {
                 'executed_budgeted_amount': 0.0,
                 'executed_additional_amount': 0.0,
                 'executed_total_amount': 0.0,
-                'cost_count': 0
+                'cost_count': 0,
+                'cost_budgeted_count': 0,
+                'cost_additional_count': 0,
             }
 
         CostObj = self.env['building.work.cost']
-        
-        # 1. Agrupar montos por work_id + cost_type
         domain = [('work_id', 'in', work_ids)]
-        groups = CostObj.read_group(
-            domain,
-            ['work_id', 'cost_type', 'amount'],
-            ['work_id', 'cost_type']
-        )
 
-        for g in groups:
-            w_id = g['work_id'][0]
-            c_type = g['cost_type']
-            amount = g['amount']
-            
+        # 1. Agrupar montos por work_id + cost_type usando _read_group (Odoo 19)
+        groups = CostObj._read_group(
+            domain,
+            groupby=['work_id', 'cost_type'],
+            aggregates=['amount:sum'],
+        )
+        # Cada elemento retorna: (work_record, cost_type_value, amount_sum)
+        for work_rec, c_type, amount_sum in groups:
+            w_id = work_rec.id
             if w_id in result:
+                amt = amount_sum or 0.0
                 if c_type == 'budgeted':
-                    result[w_id]['executed_budgeted_amount'] += amount
+                    result[w_id]['executed_budgeted_amount'] += amt
                 elif c_type == 'additional':
-                    result[w_id]['executed_additional_amount'] += amount
-                
-                result[w_id]['executed_total_amount'] += amount
+                    result[w_id]['executed_additional_amount'] += amt
+                result[w_id]['executed_total_amount'] += amt
 
-        # 2. Contar registros (independiente del tipo)
-        count_groups = CostObj.read_group(
+        # 2. Contar registros por obra Y tipo (para smart buttons separados)
+        count_groups = CostObj._read_group(
             domain,
-            ['work_id'],
-            ['work_id']
+            groupby=['work_id', 'cost_type'],
+            aggregates=['__count'],
         )
-        for g in count_groups:
-            w_id = g['work_id'][0]
-            count = g['work_id_count']
+        for work_rec, c_type, count in count_groups:
+            w_id = work_rec.id
             if w_id in result:
-                result[w_id]['cost_count'] = count
+                result[w_id]['cost_count'] += count
+                if c_type == 'budgeted':
+                    result[w_id]['cost_budgeted_count'] += count
+                elif c_type == 'additional':
+                    result[w_id]['cost_additional_count'] += count
 
         return result

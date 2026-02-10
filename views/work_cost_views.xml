@@ -1,67 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ============================================================= -->
+    <!-- VISTA FORM: Costo Operativo (Rediseño UX profesional)         -->
+    <!-- Flujo: Descripción → Obra → Tipo → Cantidad → Costo → Guardar -->
+    <!-- ============================================================= -->
     <record id="view_building_work_cost_form" model="ir.ui.view">
         <field name="name">building.work.cost.form</field>
         <field name="model">building.work.cost</field>
         <field name="arch" type="xml">
             <form string="Costo Operativo">
-                <header>
-                    <field name="cost_type" widget="statusbar" options="{'clickable': '0'}"/>
-                </header>
                 <sheet>
+                    <!-- Título principal -->
                     <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
+                        <label for="name"/>
                         <h1>
-                            <field name="name" placeholder="Ej. Materiales Varios"/>
+                            <field name="name" placeholder="Ej: Silicón para acabados, Cemento fase 1..."/>
                         </h1>
                     </div>
+
+                    <!-- Fila de KPIs: Tipo + Monto Total (visibles siempre) -->
+                    <div class="row mb-3 mt-3">
+                        <div class="col-6">
+                            <div style="padding: 12px 20px; background: #EEF2FF; border-radius: 8px; border-left: 4px solid #6366F1;">
+                                <small class="text-muted d-block">Tipo de Costo</small>
+                                <strong style="font-size: 16px;">
+                                    <field name="cost_type" widget="radio" options="{'horizontal': true}"/>
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="padding: 12px 20px; background: #F0FDF4; border-radius: 8px; border-left: 4px solid #22C55E;">
+                                <small class="text-muted d-block">Monto Total</small>
+                                <h3 style="margin: 0; color: #16A34A;">
+                                    <field name="amount" widget="monetary"/>
+                                </h3>
+                                <field name="currency_id" invisible="1"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grupo principal: Datos esenciales -->
                     <group>
-                        <group name="main_details">
-                            <field name="date"/>
+                        <group string="📋 Datos del Costo">
                             <field name="work_id"/>
-                            <field name="cost_type"/>
+                            <field name="stage_id" domain="[('work_id', '=', work_id)]"/>
+                            <field name="date"/>
+                            <field name="budget_line_id" invisible="cost_type == 'additional'" required="cost_type == 'budgeted'" domain="[('work_id', '=', work_id)]"/>
                         </group>
-                        <group name="financial_details">
-                            <field name="product_id"/>
-                            <field name="qty"/>
-                            <field name="uom_id"/>
-                            <field name="unit_cost"/>
-                            <field name="currency_id" invisible="1"/>
-                            <field name="amount" decoration-bf="1"/>
+                        <group string="💰 Importes">
+                            <field name="qty" string="Cantidad"/>
+                            <field name="unit_cost" string="Costo Unitario"/>
                         </group>
                     </group>
-                    <group name="classification">
-                        <field name="stage_id" domain="[('work_id', '=', work_id)]"/>
-                        <field name="budget_line_id" invisible="cost_type == 'additional'" required="cost_type == 'budgeted'" domain="[('work_id', '=', work_id)]"/>
-                    </group>
-                    <group name="description">
-                        <field name="description"/>
-                    </group>
+
+                    <!-- Sección opcional: Producto (catálogo) -->
+                    <notebook>
+                        <page string="Producto (Catálogo)" name="product_info">
+                            <div class="alert alert-info mb-3" role="alert">
+                                <i class="fa fa-info-circle"/>
+ Opcional: Vincule un producto del catálogo para estandarizar conceptos entre obras.
+                                Al seleccionar un producto se autocompleta el nombre y costo unitario.
+                            </div>
+                            <group>
+                                <group>
+                                    <field name="product_id" string="Producto del Catálogo"/>
+                                </group>
+                                <group>
+                                    <!-- UdM oculta al usuario, se usa internamente -->
+                                    <field name="uom_id" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Notas" name="notes">
+                            <field name="description" placeholder="Describa el contexto del gasto: ubicación, proveedor, justificación..."/>
+                        </page>
+                    </notebook>
+
+                    <!-- Campo active oculto para archivado -->
+                    <field name="active" invisible="1"/>
+                    <field name="company_id" invisible="1"/>
                 </sheet>
                 <chatter/>
             </form>
         </field>
     </record>
 
+    <!-- ============================================================= -->
+    <!-- VISTA LIST: Costos Operativos                                 -->
+    <!-- ============================================================= -->
     <record id="view_building_work_cost_list" model="ir.ui.view">
         <field name="name">building.work.cost.list</field>
         <field name="model">building.work.cost</field>
         <field name="arch" type="xml">
-            <list string="Costos Operativos" decoration-info="cost_type == 'budgeted'" decoration-muted="cost_type == 'additional'">
+            <list string="Costos Operativos" decoration-info="cost_type == 'budgeted'" decoration-warning="cost_type == 'additional'">
                 <field name="date"/>
                 <field name="name"/>
-                <field name="work_id"/>
+                <field name="work_id" column_invisible="context.get('default_work_id')"/>
                 <field name="stage_id" optional="show"/>
-                <field name="cost_type"/>
+                <field name="cost_type" widget="badge" decoration-info="cost_type == 'budgeted'" decoration-warning="cost_type == 'additional'"/>
                 <field name="budget_line_id" optional="hide"/>
                 <field name="product_id" optional="hide"/>
-                <field name="qty" optional="show"/>
+                <field name="qty"/>
                 <field name="unit_cost" optional="hide"/>
                 <field name="amount" sum="Total"/>
+                <field name="currency_id" column_invisible="1"/>
             </list>
         </field>
     </record>
 
+    <!-- ============================================================= -->
+    <!-- VISTA SEARCH: Costos Operativos (Odoo 19 compatible)          -->
+    <!-- NOTA: Sin <group expand="1"> que no es válido en Odoo 19      -->
+    <!-- ============================================================= -->
     <record id="view_building_work_cost_search" model="ir.ui.view">
         <field name="name">building.work.cost.search</field>
         <field name="model">building.work.cost</field>
@@ -71,33 +121,75 @@
                 <field name="work_id"/>
                 <field name="budget_line_id"/>
                 <field name="product_id"/>
-
                 <filter string="Presupuestados" name="type_budgeted" domain="[('cost_type', '=', 'budgeted')]"/>
                 <filter string="Adicionales" name="type_additional" domain="[('cost_type', '=', 'additional')]"/>
                 <separator/>
                 <filter string="Hoy" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
-
-                <group expand="1" string="Agrupar Por">
-                    <filter string="Obra" name="grp_work" context="{'group_by': 'work_id'}"/>
-                    <filter string="Tipo" name="grp_type" context="{'group_by': 'cost_type'}"/>
-                    <filter string="Etapa" name="grp_stage" context="{'group_by': 'stage_id'}"/>
-                    <filter string="Fecha" name="grp_date" context="{'group_by': 'date:month'}"/>
-                </group>
+                <separator/>
+                <filter string="Obra" name="grp_work" context="{'group_by': 'work_id'}"/>
+                <filter string="Tipo" name="grp_type" context="{'group_by': 'cost_type'}"/>
+                <filter string="Etapa" name="grp_stage" context="{'group_by': 'stage_id'}"/>
+                <filter string="Fecha" name="grp_date" context="{'group_by': 'date:month'}"/>
             </search>
         </field>
     </record>
 
+    <!-- ============================================================= -->
+    <!-- ACCIONES PARA SMART BUTTONS (2 acciones separadas)            -->
+    <!-- ============================================================= -->
+
+    <!-- Acción general (se mantiene para compatibilidad) -->
     <record id="action_building_work_cost" model="ir.actions.act_window">
         <field name="name">Costos de Obra</field>
         <field name="res_model">building.work.cost</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_building_work_cost_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-            Registra los costos operativos de tus obras.
+                Registra los costos operativos de tus obras.
             </p>
             <p>
-            Puedes registrar costos presupuestados (ligados a partidas) o gastos adicionales indirectos.
+                Puedes registrar costos presupuestados (ligados a partidas)
+                o gastos adicionales indirectos.
             </p>
+        </field>
+    </record>
+
+    <!-- Acción: Costos Presupuestados (para smart button) -->
+    <record id="action_building_work_cost_budgeted" model="ir.actions.act_window">
+        <field name="name">Costos Presupuestados</field>
+        <field name="res_model">building.work.cost</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_building_work_cost_search"/>
+        <field name="domain">[('cost_type', '=', 'budgeted')]</field>
+        <field name="context">{
+            'default_cost_type': 'budgeted',
+            'search_default_type_budgeted': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay costos presupuestados registrados.
+            </p>
+            <p>Registre consumos ligados a partidas del presupuesto.</p>
+        </field>
+    </record>
+
+    <!-- Acción: Costos Adicionales (para smart button) -->
+    <record id="action_building_work_cost_additional" model="ir.actions.act_window">
+        <field name="name">Costos Adicionales</field>
+        <field name="res_model">building.work.cost</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_building_work_cost_search"/>
+        <field name="domain">[('cost_type', '=', 'additional')]</field>
+        <field name="context">{
+            'default_cost_type': 'additional',
+            'search_default_type_additional': 1,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay costos adicionales registrados.
+            </p>
+            <p>Registre gastos indirectos: clavos, silicón, resistol, etc.</p>
         </field>
     </record>
 </odoo>
