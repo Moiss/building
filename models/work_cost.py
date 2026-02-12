@@ -144,6 +144,40 @@ class BuildingWorkCost(models.Model):
             if record.budget_line_id and record.budget_line_id.work_id != record.work_id:
                 raise ValidationError(_("La partida seleccionada no pertenece a la obra."))
 
+    # === EVIDENCIAS (ETAPA 4.2) ===
+    evidence_ids = fields.One2many(
+        'building.work.evidence',
+        'cost_id',
+        string='Evidencias'
+    )
+    
+    evidence_count = fields.Integer(
+        string='# Evidencias',
+        compute='_compute_evidence_count',
+        store=False
+    )
+    
+    def _compute_evidence_count(self):
+        """Cuenta las evidencias relacionadas con este costo."""
+        for record in self:
+            record.evidence_count = len(record.evidence_ids)
+
+    def action_view_evidences(self):
+        """Ver evidencias asociadas al costo."""
+        self.ensure_one()
+        return {
+            'name': _('Evidencias'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.work.evidence',
+            'view_mode': 'list,form',
+            'domain': [('cost_id', '=', self.id)],
+            'context': {
+                'default_work_id': self.work_id.id,
+                'default_stage_id': self.stage_id.id,
+                'default_cost_id': self.id
+            },
+        }
+
     # === CRUD OVERRIDES (TRIGGER ENGINE) ===
     @api.model_create_multi
     def create(self, vals_list):

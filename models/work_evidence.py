@@ -49,6 +49,14 @@ class BuildingWorkEvidence(models.Model):
         help="Opcional: vincule a una partida del presupuesto"
     )
 
+    cost_id = fields.Many2one(
+        'building.work.cost',
+        string='Costo Operativo',
+        required=False,
+        domain="[('work_id', '=', work_id)]",
+        help="Opcional: vincule a un costo operativo"
+    )
+
     evidence_type = fields.Selection(
         [
             ('progress', 'Avance Físico'),

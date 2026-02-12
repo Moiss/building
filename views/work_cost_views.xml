@@ -14,6 +14,14 @@
         <field name="arch" type="xml">
             <form string="Gasto Adicional">
                 <sheet>
+                    <div name="button_box" class="oe_button_box">
+                        <button name="action_view_evidences" type="object" class="oe_stat_button" icon="fa-camera">
+                            <div class="o_stat_info">
+                                <field name="evidence_count" class="o_stat_value"/>
+                                <span class="o_stat_text">Evidencias</span>
+                            </div>
+                        </button>
+                    </div>
                     <!-- Título principal -->
                     <div class="oe_title">
                         <label for="name"/>
