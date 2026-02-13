@@ -516,7 +516,7 @@ class BuildingBudget(models.Model):
                 raise UserError(_('No se puede modificar el presupuesto de una obra finalizada.'))
             
             # ETAPA 4.3a: Bloquear edición de consolidados
-            if budget.budget_type == 'consolidated' and not (len(vals) == 1 and 'active' in vals):
+            if budget.budget_type == 'consolidated' and not (len(vals) == 1 and 'active' in vals) and not self.env.context.get('skip_consolidated_protection'):
                 raise UserError(_('Un presupuesto consolidado no puede editarse. Elimínelo y genere uno nuevo.'))
 
         result = super().write(vals)

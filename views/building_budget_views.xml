@@ -11,11 +11,11 @@
         <field name="arch" type="xml">
             <form string="Presupuesto Paramétrico">
                 <header>
-                    <button name="action_validate" type="object" string="✅ Validar Presupuesto" class="btn-primary" invisible="state == 'validated'"/>
-                    <button name="action_set_draft" type="object" string="🔓 Reabrir Presupuesto" class="btn-secondary" invisible="state == 'draft'" confirm="¿Está seguro de reabrir este presupuesto? Se podrán editar las partidas nuevamente."/>
+                    <button name="action_validate" type="object" string="✅ Validar Presupuesto" class="btn-primary" invisible="state != 'draft' or budget_type == 'consolidated'"/>
+                    <button name="action_set_draft" type="object" string="🔓 Reabrir Presupuesto" class="btn-secondary" invisible="state != 'validated' or budget_type == 'consolidated'" confirm="¿Está seguro de reabrir este presupuesto? Se podrán editar las partidas nuevamente."/>
 
                     <!-- Herramientas de Corrección (Hardening) -->
-                    <button name="action_consolidate_assigned_lines" type="object" string="🔧 Reparar Duplicados" groups="base.group_system" confirm="Esta acción unificará líneas asignadas con sus bases y eliminará duplicados. ¿Desea continuar?" class="btn-secondary"/>
+                    <button name="action_consolidate_assigned_lines" type="object" string="🔧 Reparar Duplicados" groups="base.group_system" confirm="Esta acción unificará líneas asignadas con sus bases y eliminará duplicados. ¿Desea continuar?" class="btn-secondary" invisible="budget_type == 'consolidated'"/>
 
                     <field name="state" widget="statusbar" statusbar_visible="draft,validated"/>
                 </header>
@@ -31,7 +31,7 @@
                             </span>
                         </h1>
                         <label for="budget_type" class="oe_edit_only" invisible="state != 'draft'"/>
-                        <field name="budget_type" readonly="state != 'draft'" widget="radio" options="{'horizontal': True}" invisible="state != 'draft'"/>
+                        <field name="budget_type" readonly="state != 'draft'" widget="radio" options="{'horizontal': True}" invisible="state != 'draft' or budget_type == 'consolidated'"/>
                         <field name="work_id" readonly="state != 'draft'" options="{'no_create': True}"/>
                     </div>
 
@@ -100,11 +100,11 @@
                     <!-- BOTONES DE ACCIÓN (flujo único)               -->
                     <!-- ============================================= -->
                     <div style="margin-bottom: 20px; margin-top: 10px;">
-                        <button name="action_add_chapter" type="object" string="Capítulo" class="btn-secondary" icon="fa-folder-open" invisible="state == 'validated' or is_consolidated"/>
+                        <button name="action_add_chapter" type="object" string="Capítulo" class="btn-secondary" icon="fa-folder-open" invisible="state == 'validated' or budget_type == 'consolidated'"/>
                         <span style="margin-left: 20px;"/>
-                        <button name="action_add_line" type="object" string="Partida" class="btn-primary" icon="fa-plus" invisible="state == 'validated' or is_consolidated"/>
+                        <button name="action_add_line" type="object" string="Partida" class="btn-primary" icon="fa-plus" invisible="state == 'validated' or budget_type == 'consolidated'"/>
                         <span style="margin-left: 20px;"/>
-                        <button name="action_distribute_all" type="object" string="⚙ Distribuir Todo" class="btn-secondary" icon="fa-magic" invisible="state == 'validated' or is_consolidated"/>
+                        <button name="action_distribute_all" type="object" string="⚙ Distribuir Todo" class="btn-secondary" icon="fa-magic" invisible="state == 'validated' or budget_type == 'consolidated'"/>
                     </div>
 
 
@@ -113,7 +113,7 @@
                     <!-- LISTA DE CAPÍTULOS Y PARTIDAS                 -->
                     <!-- ============================================= -->
                     <field name="chapter_ids" mode="list" readonly="state == 'validated'">
-                        <list editable="bottom" decoration-bf="True" create="state != 'validated' and not parent.is_consolidated" delete="state != 'validated' and not parent.is_consolidated">
+                        <list editable="bottom" decoration-bf="True" create="state != 'validated' and parent.budget_type != 'consolidated'" delete="state != 'validated' and parent.budget_type != 'consolidated'">
                             <field name="state" column_invisible="1"/>
                             <field name="code" string="Cód" width="60px" readonly="state == 'validated'"/>
                             <field name="name" string="Capítulo" readonly="state == 'validated'"/>

@@ -43,6 +43,7 @@ Roles soportados:
         'views/building_ai_config_wizard_views.xml',
         'views/building_change_real_source_wizard_views.xml',
         'views/building_chapter_loader_wizard_views.xml',
+        'views/consolidate_budget_wizard_views.xml',
         'views/building_work_views.xml',
         'views/building_stage_views.xml',
         'views/building_alert_views.xml',

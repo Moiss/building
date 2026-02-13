@@ -245,6 +245,19 @@ class BuildingWork(models.Model):
         # Si no hay selección, retornamos todos los activos (para sumarizar)
         return self.budget_ids.filtered(lambda b: b.state in ['validated', 'consolidated'])
 
+    def action_clear_budget_selection(self):
+        """Limpia la selección de presupuesto para mostrar todos."""
+        self.ensure_one()
+        self.selected_budget_id = False
+        # Retornar recarga del form para refrescar KPIs
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.work',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'main',
+        }
+
     @api.depends('selected_budget_id')
     def _compute_selected_budget_name(self):
         for work in self:
@@ -449,11 +462,17 @@ class BuildingWork(models.Model):
 
     @api.depends('budget_total', 'amount_committed', 'amount_paid')
     def _compute_financial_progress(self):
-        """Calcula el avance financiero: (Pagado + Comprometido) / Presupuesto Total."""
+        """Calcula el avance financiero: (Pagado + Comprometido) / Presupuesto Total GLOBAL."""
         for work in self:
-            if work.budget_total > 0:
+            # Siempre usar el total GLOBAL para avance financiero
+            all_budgets = work.budget_ids.filtered(
+                lambda b: b.state in ('validated', 'consolidated')
+            )
+            global_total = sum(all_budgets.mapped('total_amount'))
+            
+            if global_total > 0:
                 work.financial_progress = (
-                    (work.amount_paid + work.amount_committed) / work.budget_total
+                    (work.amount_paid + work.amount_committed) / global_total
                 ) * 100
             else:
                 work.financial_progress = 0.0
@@ -527,6 +546,33 @@ class BuildingWork(models.Model):
             'context': {'default_work_id': self.id},
         }
 
+
+    def action_open_consolidate_wizard(self):
+        """Abre wizard para consolidar presupuestos de la obra."""
+        self.ensure_one()
+        # Verificar que hay presupuestos validados
+        validated = self.budget_ids.filtered(
+            lambda b: b.state == 'validated' and b.budget_type != 'consolidated'
+        )
+        if len(validated) < 2:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('No hay suficientes presupuestos'),
+                    'message': _('Necesita al menos 2 presupuestos validados para consolidar.'),
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+        return {
+            'name': _('Consolidar Presupuestos'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.consolidate.budget.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_work_id': self.id},
+        }
 
     def action_register_progress(self):
         """Abre wizard para registrar avance en una etapa."""

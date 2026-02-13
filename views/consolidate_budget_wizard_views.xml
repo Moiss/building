@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="consolidate_budget_wizard_view_form" model="ir.ui.view">
+        <field name="name">building.consolidate.budget.wizard.form</field>
+        <field name="model">building.consolidate.budget.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Consolidar Presupuestos">
+                <sheet>
+                    <field name="work_id" invisible="1"/>
+                    <field name="existing_consolidated_id" invisible="1"/>
+
+                    <!-- Banner de advertencia si ya existe consolidado -->
+                    <div class="alert alert-warning" role="alert" invisible="not existing_consolidated_id">
+                        <i class="fa fa-exclamation-triangle"/>
+                        Ya existe un presupuesto consolidado para esta obra.
+                        Al generar uno nuevo, el anterior será archivado.
+                    </div>
+
+                    <group>
+                        <field name="consolidated_name"/>
+                    </group>
+
+                    <group string="Presupuestos a incluir">
+                        <field name="budget_ids" widget="many2many_tags" options="{'no_create': True}" nolabel="1" colspan="2"/>
+                    </group>
+
+                    <!-- Info de lo que se va a consolidar -->
+                    <div class="text-muted" style="margin-top: 10px;">
+                        <i class="fa fa-info-circle"/>
+                        Se copiarán los capítulos y partidas de cada presupuesto
+                        seleccionado. Los capítulos llevarán un prefijo con el
+                        nombre del presupuesto origen para identificarlos.
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="Consolidar" name="action_consolidate" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_consolidate_budget_wizard" model="ir.actions.act_window">
+        <field name="name">Consolidar Presupuestos</field>
+        <field name="res_model">building.consolidate.budget.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_work_id': active_id}</field>
+    </record>
+</odoo>

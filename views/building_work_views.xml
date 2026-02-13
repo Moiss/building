@@ -12,6 +12,7 @@
             <form string="Dashboard de Obra">
                 <header>
                     <button name="action_start_execution" type="object" string="▶ Iniciar Ejecución" class="oe_highlight" invisible="state != 'planning'"/>
+                    <button name="action_open_consolidate_wizard" type="object" string="Consolidar Presupuestos" icon="fa-compress" class="oe_highlight" invisible="budget_count &lt; 2"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,planning,running,done"/>
                 </header>
                 <sheet>
@@ -78,8 +79,11 @@
                             <i class="fa fa-filter"/>
  Visualizando:
                         </span>
-                        <div style="width: 300px;">
-                            <field name="selected_budget_id" options="{'no_create': True, 'no_open': True}" placeholder="Todos los Presupuestos (Consolidado)"/>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 300px;">
+                                <field name="selected_budget_id" options="{'no_create': True, 'no_open': True}" placeholder="Todos los Presupuestos (Consolidado)"/>
+                            </div>
+                            <button name="action_clear_budget_selection" type="object" string="Ver Todos" class="btn-link btn-sm" icon="fa-refresh" invisible="not selected_budget_id"/>
                         </div>
                     </div>
                     <div style="margin-bottom: 20px;">
