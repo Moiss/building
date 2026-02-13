@@ -25,9 +25,26 @@
                         <label for="name"/>
                         <h1>
                             <field name="name"/>
+                            <span class="ps-2">
+                                <field name="budget_type" widget="badge" decoration-info="budget_type == 'base'" decoration-warning="budget_type == 'extra'" decoration-success="budget_type == 'consolidated'"/>
+                                <field name="version_label" class="ms-2 text-muted" style="font-size: 0.6em;"/>
+                            </span>
                         </h1>
-                        <field name="work_id" readonly="1"/>
+                        <label for="budget_type" class="oe_edit_only" invisible="state != 'draft'"/>
+                        <field name="budget_type" readonly="state != 'draft'" widget="radio" options="{'horizontal': True}" invisible="state != 'draft'"/>
+                        <field name="work_id" readonly="state != 'draft'" options="{'no_create': True}"/>
                     </div>
+
+                    <!-- Banner para Presupuestos Consolidados -->
+                    <field name="is_consolidated" invisible="1"/>
+                    <div class="alert alert-info" role="alert" invisible="not is_consolidated">
+                        <i class="fa fa-info-circle" title="Información"/>
+                        <strong>Presupuesto Consolidado:</strong> Generado automáticamente. No editable.
+                    </div>
+
+                    <group invisible="not is_consolidated">
+                        <field name="source_budget_ids" widget="many2many_tags" options="{'color_field': 'budget_type'}"/>
+                    </group>
 
                     <!-- ============================================= -->
                     <!-- KPIs SUPERIORES (compactos)                   -->
@@ -83,11 +100,11 @@
                     <!-- BOTONES DE ACCIÓN (flujo único)               -->
                     <!-- ============================================= -->
                     <div style="margin-bottom: 20px; margin-top: 10px;">
-                        <button name="action_add_chapter" type="object" string="Capítulo" class="btn-secondary" icon="fa-folder-open" invisible="state == 'validated'"/>
+                        <button name="action_add_chapter" type="object" string="Capítulo" class="btn-secondary" icon="fa-folder-open" invisible="state == 'validated' or is_consolidated"/>
                         <span style="margin-left: 20px;"/>
-                        <button name="action_add_line" type="object" string="Partida" class="btn-primary" icon="fa-plus" invisible="state == 'validated'"/>
+                        <button name="action_add_line" type="object" string="Partida" class="btn-primary" icon="fa-plus" invisible="state == 'validated' or is_consolidated"/>
                         <span style="margin-left: 20px;"/>
-                        <button name="action_distribute_all" type="object" string="⚙ Distribuir Todo" class="btn-secondary" icon="fa-magic" invisible="state == 'validated'"/>
+                        <button name="action_distribute_all" type="object" string="⚙ Distribuir Todo" class="btn-secondary" icon="fa-magic" invisible="state == 'validated' or is_consolidated"/>
                     </div>
 
 
@@ -96,7 +113,7 @@
                     <!-- LISTA DE CAPÍTULOS Y PARTIDAS                 -->
                     <!-- ============================================= -->
                     <field name="chapter_ids" mode="list" readonly="state == 'validated'">
-                        <list editable="bottom" decoration-bf="True" create="state != 'validated'" delete="state != 'validated'">
+                        <list editable="bottom" decoration-bf="True" create="state != 'validated' and not parent.is_consolidated" delete="state != 'validated' and not parent.is_consolidated">
                             <field name="state" column_invisible="1"/>
                             <field name="code" string="Cód" width="60px" readonly="state == 'validated'"/>
                             <field name="name" string="Capítulo" readonly="state == 'validated'"/>
@@ -104,8 +121,8 @@
                             <field name="total_distributed" string="Distribuido" sum="Distribuido" width="140px"/>
                             <field name="line_count" string="Partidas" width="70px"/>
                             <button name="action_view_lines" type="object" string="" icon="fa-list" title="Ver Partidas del Capítulo"/>
-                            <button name="action_add_line" type="object" string="" icon="fa-plus" title="Agregar Partida a este Capítulo" class="text-success" invisible="state == 'validated'"/>
-                            <button name="action_distribute_chapter" type="object" string="" icon="fa-magic" title="Distribuir Capítulo" invisible="state == 'validated'"/>
+                            <button name="action_add_line" type="object" string="" icon="fa-plus" title="Agregar Partida a este Capítulo" class="text-success" invisible="state == 'validated' or parent.is_consolidated"/>
+                            <button name="action_distribute_chapter" type="object" string="" icon="fa-magic" title="Distribuir Capítulo" invisible="state == 'validated' or parent.is_consolidated"/>
                         </list>
                     </field>
 
@@ -120,6 +137,7 @@
                             <group>
                                 <group string="Datos Generales">
                                     <field name="work_id" readonly="1"/>
+                                    <field name="budget_type" readonly="state != 'draft'"/>
                                     <field name="duration_months"/>
                                 </group>
                                 <group string="Estadísticas">
@@ -143,12 +161,33 @@
             <list string="Presupuestos">
                 <field name="name"/>
                 <field name="work_id"/>
+                <field name="budget_type" widget="badge" decoration-info="budget_type == 'base'" decoration-warning="budget_type == 'extra'" decoration-success="budget_type == 'consolidated'"/>
+                <field name="version_label" widget="badge"/>
                 <field name="total_amount" sum="Total"/>
                 <field name="total_distributed" sum="Distribuido"/>
                 <field name="difference"/>
                 <field name="state" widget="badge" decoration-success="state == 'validated'" decoration-info="state == 'draft'"/>
                 <field name="currency_id" column_invisible="1"/>
             </list>
+        </field>
+    </record>
+
+    <!-- Vista Search: Presupuestos -->
+    <record id="building_budget_view_search" model="ir.ui.view">
+        <field name="name">building.budget.search</field>
+        <field name="model">building.budget</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Presupuestos">
+                <field name="name"/>
+                <field name="work_id"/>
+                <filter string="Base" name="type_base" domain="[('budget_type', '=', 'base')]"/>
+                <filter string="Extras / Adendas" name="type_extra" domain="[('budget_type', '=', 'extra')]"/>
+                <filter string="Consolidados" name="type_consolidated" domain="[('budget_type', '=', 'consolidated')]"/>
+                <separator/>
+                <filter string="Borrador" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Validado" name="validated" domain="[('state', '=', 'validated')]"/>
+
+            </search>
         </field>
     </record>
 

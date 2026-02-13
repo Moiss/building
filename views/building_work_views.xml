@@ -71,6 +71,17 @@
                     </group>
 
                     <!-- SECTION: Budget KPIs (Card Style) -->
+                    <!-- SELECTOR DE PRESUPUESTO (ETAPA 4.3a) -->
+                    <field name="budget_count" invisible="1"/>
+                    <div style="margin-bottom: 5px; display: flex; justify-content: flex-end; align-items: center;" invisible="budget_count &lt;= 1">
+                        <span class="text-muted me-2" style="font-size: 0.9em;">
+                            <i class="fa fa-filter"/>
+ Visualizando:
+                        </span>
+                        <div style="width: 300px;">
+                            <field name="selected_budget_id" options="{'no_create': True, 'no_open': True}" placeholder="Todos los Presupuestos (Consolidado)"/>
+                        </div>
+                    </div>
                     <div style="margin-bottom: 20px;">
                         <h4 style="margin-bottom: 15px; font-weight: 600; color: #374151;">Presupuesto</h4>
                         <div class="row">

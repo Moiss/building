@@ -115,6 +115,22 @@ class BuildingWork(models.Model):
         string='Presupuestos'
     )
 
+    # === SELECTOR DE PRESUPUESTO (ETAPA 4.3a) ===
+    selected_budget_id = fields.Many2one(
+        'building.budget',
+        string='Presupuesto en Dashboard',
+        domain="[('work_id', '=', id)]",
+        help="Seleccione qué presupuesto ver en el dashboard. Vacío = muestra la suma de todos.",
+        tracking=False,
+        ondelete='set null'
+    )
+
+    selected_budget_name = fields.Char(
+        string='Presupuesto Mostrado',
+        compute='_compute_selected_budget_name',
+        store=False
+    )
+
     budget_count = fields.Integer(
         string='# Presupuestos',
         compute='_compute_budget_count'
@@ -216,23 +232,44 @@ class BuildingWork(models.Model):
             return drafts[0]
         return self.env['building.budget']
 
+    def _get_selected_budget(self):
+        """Devuelve el/los presupuestos a mostrar en dashboard.
+        
+        Si hay selección -> devuelve ese.
+        Si no -> devuelve todos los validados/consolidados.
+        """
+        self.ensure_one()
+        if self.selected_budget_id:
+            return self.selected_budget_id
+        
+        # Si no hay selección, retornamos todos los activos (para sumarizar)
+        return self.budget_ids.filtered(lambda b: b.state in ['validated', 'consolidated'])
+
+    @api.depends('selected_budget_id')
+    def _compute_selected_budget_name(self):
+        for work in self:
+            if work.selected_budget_id:
+                work.selected_budget_name = work.selected_budget_id.name
+            else:
+                work.selected_budget_name = _("Todos los presupuestos")
+
     @api.depends(
         'budget_ids',
         'budget_ids.state',
         'budget_ids.total_amount',
         'budget_ids.total_distributed',
+        'selected_budget_id'
     )
     def _compute_budget_kpis(self):
-        """Calcula KPIs del presupuesto desde el presupuesto activo.
+        """Calcula KPIs del presupuesto (Soporte Multi-Presupuesto).
         
-        - budget_total: suma de partidas del presupuesto
-        - amount_committed: total distribuido en periodos
+        Usa _get_selected_budget() para sumar uno o varios.
         """
         for work in self:
-            budget = work._get_active_budget()
-            if budget:
-                work.budget_total = budget.total_amount
-                work.amount_committed = budget.total_distributed
+            budgets = work._get_selected_budget()
+            if budgets:
+                work.budget_total = sum(budgets.mapped('total_amount'))
+                work.amount_committed = sum(budgets.mapped('total_distributed'))
             else:
                 work.budget_total = 0.0
                 work.amount_committed = 0.0
@@ -433,14 +470,20 @@ class BuildingWork(models.Model):
     def action_view_committed(self):
         """Ver partidas que contribuyen al comprometido (distribuido > 0)."""
         self.ensure_one()
-        budget = self._get_active_budget()
+        budgets = self._get_selected_budget()
+        # Si budgets está vacío, usar _get_active_budget para no romper contexto
+        # Aunque si está vacío no habrá partidas.
+        if not budgets:
+             budget = self._get_active_budget() # Fallback compatible
+             budgets = budget
+        
         return {
             'name': _('Comprometido (Partidas Distribuidas)'),
             'type': 'ir.actions.act_window',
             'res_model': 'building.budget.line',
             'view_mode': 'list,form',
-            'domain': [('budget_id', '=', budget.id), ('total_distributed', '>', 0)],
-            'context': {'default_budget_id': budget.id},
+            'domain': [('budget_id', 'in', budgets.ids), ('total_distributed', '>', 0)],
+            'context': {'default_budget_id': budgets[0].id if budgets else False},
         }
 
     def action_view_paid(self):
@@ -458,37 +501,29 @@ class BuildingWork(models.Model):
     def action_view_available(self):
         """Ver partidas con saldo disponible por distribuir."""
         self.ensure_one()
-        budget = self._get_active_budget()
+        budgets = self._get_selected_budget()
+        if not budgets:
+             budget = self._get_active_budget()
+             budgets = budget
+
         return {
             'name': _('Disponible (Por Distribuir)'),
             'type': 'ir.actions.act_window',
             'res_model': 'building.budget.line',
             'view_mode': 'list,form',
-            'domain': [('budget_id', '=', budget.id), ('amount_undistributed', '>', 0)],
-            'context': {'default_budget_id': budget.id},
+            'domain': [('budget_id', 'in', budgets.ids), ('amount_undistributed', '>', 0)],
+            'context': {'default_budget_id': budgets[0].id if budgets else False},
         }
 
     def action_view_budget(self):
-        """Abre el presupuesto paramétrico de la obra. Crea uno si no existe."""
+        """Abre la lista de presupuestos de la obra."""
         self.ensure_one()
-        
-        # Buscar presupuesto existente o crear uno nuevo
-        budget = self.budget_ids[:1]
-        if not budget:
-            budget = self.env['building.budget'].create({
-                'name': _('Presupuesto - %s') % self.name,
-                'work_id': self.id,
-                'duration_months': 12,
-            })
-            # Marcar que la obra tiene presupuesto paramétrico
-            self.has_parametric_budget = True
-        
         return {
-            'name': _('Presupuesto Paramétrico'),
+            'name': _('Presupuestos - %s') % self.name,
             'type': 'ir.actions.act_window',
             'res_model': 'building.budget',
-            'res_id': budget.id,
-            'view_mode': 'form',
+            'view_mode': 'list,form',
+            'domain': [('work_id', '=', self.id)],
             'context': {'default_work_id': self.id},
         }
 

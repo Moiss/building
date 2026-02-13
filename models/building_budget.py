@@ -61,7 +61,39 @@ class BuildingBudget(models.Model):
     state = fields.Selection([
         ('draft', 'Borrador'),
         ('validated', 'Validado'),
+        ('consolidated', 'Consolidado'),
     ], string='Estado', default='draft', required=True, tracking=True)
+
+    # === TIPO DE PRESUPUESTO (ETAPA 4.3a) ===
+    budget_type = fields.Selection([
+        ('base', 'Presupuesto Base'),
+        ('extra', 'Extra / Adenda'),
+        ('consolidated', 'Consolidado'),
+    ], string='Tipo', default='base', required=True, tracking=True,
+       help="Base: presupuesto original.\nExtra: ampliaciones.\nConsolidado: generado automáticamente.")
+
+    source_budget_ids = fields.Many2many(
+        'building.budget',
+        'building_budget_consolidation_rel',
+        'consolidated_id',
+        'source_id',
+        string='Presupuestos Origen',
+        readonly=True,
+        help='Presupuestos que se usaron para generar este consolidado'
+    )
+
+    is_consolidated = fields.Boolean(
+        string='Es Consolidado',
+        compute='_compute_is_consolidated',
+        store=False
+    )
+    
+    active = fields.Boolean(default=True)
+
+    @api.depends('budget_type')
+    def _compute_is_consolidated(self):
+        for budget in self:
+            budget.is_consolidated = (budget.budget_type == 'consolidated')
 
     # === VERSIONADO (R1) ===
     version_no = fields.Integer(
@@ -201,8 +233,12 @@ class BuildingBudget(models.Model):
         - Si hay diferencia en distribución, muestra advertencia (no bloquea)
         """
         self.ensure_one()
+        self.ensure_one()
         if self.state == 'validated':
             raise UserError(_('El presupuesto ya está validado.'))
+        
+        if self.budget_type == 'consolidated':
+            raise UserError(_('Un presupuesto consolidado no se valida manualmente.'))
         
         # Validar que existan partidas
         if self.line_count == 0:
@@ -286,6 +322,9 @@ class BuildingBudget(models.Model):
             raise UserError(_(
                 'Solo el Director de Obra puede reabrir un presupuesto validado.'
             ))
+            
+        if self.budget_type == 'consolidated':
+            raise UserError(_('Un presupuesto consolidado no puede reabrirse. Elimínelo y genere uno nuevo.'))
         
         # Registrar reapertura
         self.write({
@@ -475,6 +514,10 @@ class BuildingBudget(models.Model):
         for budget in self:
             if budget.work_id.state == 'done':
                 raise UserError(_('No se puede modificar el presupuesto de una obra finalizada.'))
+            
+            # ETAPA 4.3a: Bloquear edición de consolidados
+            if budget.budget_type == 'consolidated' and not (len(vals) == 1 and 'active' in vals):
+                raise UserError(_('Un presupuesto consolidado no puede editarse. Elimínelo y genere uno nuevo.'))
 
         result = super().write(vals)
         # Forzar recálculo de KPIs en la obra después de cualquier cambio
@@ -484,6 +527,11 @@ class BuildingBudget(models.Model):
                 budget.work_id._compute_amount_available()
                 budget.work_id._compute_financial_progress()
         return result
+
+    def action_archive(self):
+        """Archiva el presupuesto (lo oculta)."""
+        self.write({'active': False})
+
 
     # === DATA MIGRATION / CLEANUP (HARDENING 0 -> 3.3.2) ===
     def action_consolidate_assigned_lines(self):
