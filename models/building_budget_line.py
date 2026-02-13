@@ -42,7 +42,8 @@ class BuildingBudgetLine(models.Model):
         string='Capítulo',
         required=True,
         ondelete='cascade',
-        index=True
+        index=True,
+        domain="[('budget_id', '=', budget_id)]"
     )
 
     code = fields.Char(
