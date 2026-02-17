@@ -6,9 +6,11 @@
         <field name="inherit_id" ref="account.view_move_form"/>
         <field name="arch" type="xml">
 
+
             <!-- Botón en Header -->
             <xpath expr="//header" position="inside">
                 <button name="action_open_allocate_wizard" type="object" string="Aplicar a Obra" icon="fa-building" class="oe_highlight" invisible="move_type not in ('in_invoice', 'in_refund') or state != 'posted' or is_fully_allocated"/>
+                <button name="action_open_cfdi_wizard" type="object" string="Cargar XML CFDI" icon="fa-file-code-o" class="btn-primary" invisible="move_type not in ('in_invoice', 'in_refund') or state != 'draft'"/>
             </xpath>
 
             <!-- Smart Button -->
@@ -28,6 +30,24 @@
                     <i class="fa fa-check-circle"/>
                     Factura completamente distribuida a obras.
                 </div>
+            </xpath>
+
+            <!-- Datos CFDI -->
+            <xpath expr="//sheet/group" position="after">
+                <group string="Datos CFDI (XML)" invisible="not has_cfdi">
+                    <group>
+                        <field name="l10n_mx_cfdi_uuid"/>
+                        <field name="l10n_mx_cfdi_folio"/>
+                        <field name="l10n_mx_cfdi_rfc_emisor"/>
+                    </group>
+                    <group>
+                        <field name="l10n_mx_cfdi_sat_status" widget="badge" decoration-success="l10n_mx_cfdi_sat_status == 'valid'" decoration-danger="l10n_mx_cfdi_sat_status == 'cancelled'" decoration-warning="l10n_mx_cfdi_sat_status in ('not_found','error')" decoration-muted="l10n_mx_cfdi_sat_status == 'not_checked'"/>
+                        <field name="l10n_mx_cfdi_fecha"/>
+                        <field name="l10n_mx_cfdi_xml_file" filename="l10n_mx_cfdi_xml_fname"/>
+                        <field name="l10n_mx_cfdi_xml_fname" invisible="1"/>
+                        <button name="action_recheck_sat" type="object" string="Revalidar SAT" icon="fa-refresh" class="btn-link"/>
+                    </group>
+                </group>
             </xpath>
 
         </field>

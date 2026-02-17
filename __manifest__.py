@@ -59,6 +59,7 @@ Roles soportados:
         'views/work_evidence_views.xml',             # FASE 4.2: Evidencias
         'views/menus.xml',
         'views/res_config_settings_views.xml',
+        'views/cfdi_load_wizard_views.xml',
     ],
     'demo': [
         'data/demo.xml',

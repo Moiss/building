@@ -82,6 +82,7 @@ class AccountMoveBuilding(models.Model):
             },
         }
 
+
     def action_view_building_allocations(self):
         """Ver distribuciones a obras de esta factura."""
         self.ensure_one()
@@ -92,3 +93,99 @@ class AccountMoveBuilding(models.Model):
             'view_mode': 'list,form',
             'domain': [('move_id', '=', self.id)],
         }
+    
+    # =========================================================
+    #  CFDI / XML LOADING
+    # =========================================================
+    
+    l10n_mx_cfdi_uuid = fields.Char(string='UUID', copy=False, readonly=True, tracking=True, index=True)
+    l10n_mx_cfdi_sat_status = fields.Selection([
+        ('not_checked', 'Sin Validar'),
+        ('valid', 'Vigente'),
+        ('cancelled', 'Cancelado'),
+        ('not_found', 'No Encontrado'),
+        ('error', 'Error / Sin Conexión')
+    ], string='Estatus SAT', default='not_checked', tracking=True, readonly=True)
+    
+    l10n_mx_cfdi_folio = fields.Char(string='Folio CFDI', readonly=True)
+    l10n_mx_cfdi_fecha = fields.Datetime(string='Fecha Timbrado', readonly=True)
+    l10n_mx_cfdi_forma_pago = fields.Char(string='Forma Pago', readonly=True)
+    l10n_mx_cfdi_metodo_pago = fields.Char(string='Método Pago', readonly=True)
+    l10n_mx_cfdi_rfc_emisor = fields.Char(string='RFC Emisor', readonly=True)
+    l10n_mx_cfdi_xml_file = fields.Binary(string='XML Original', attachment=True, copy=False)
+    l10n_mx_cfdi_xml_fname = fields.Char(string='Nombre XML')
+
+    has_cfdi = fields.Boolean(compute='_compute_has_cfdi', store=True)
+    
+    @api.depends('l10n_mx_cfdi_uuid')
+    def _compute_has_cfdi(self):
+        for move in self:
+            move.has_cfdi = bool(move.l10n_mx_cfdi_uuid)
+
+    def action_open_cfdi_wizard(self):
+        """Abre el wizard para cargar XML."""
+        self.ensure_one()
+        if self.state != 'draft':
+            raise UserError(_('Solo se puede cargar CFDI en facturas borrador.'))
+        
+        return {
+            'name': _('Cargar XML CFDI'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.cfdi.load.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_move_id': self.id},
+        }
+
+    def action_recheck_sat(self):
+        """Re-consulta el estatus del CFDI en el SAT."""
+        self.ensure_one()
+        if not self.l10n_mx_cfdi_uuid:
+            raise UserError(_('No hay UUID para validar.'))
+        
+        rfc_receptor = self.company_id.vat or ''
+        # Nota: Importamos el wizard para usar su metodo estatico o duplicamos logica
+        # Mejor usar metodo auxiliar local para no depender del wizard
+        status = self._check_sat_status(
+            self.l10n_mx_cfdi_rfc_emisor, 
+            rfc_receptor, 
+            self.amount_total, 
+            self.l10n_mx_cfdi_uuid
+        )
+        self.l10n_mx_cfdi_sat_status = status
+        
+        type_msg = 'success' if status == 'valid' else 'warning'
+        if status == 'cancelled': type_msg = 'danger'
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Validación SAT'),
+                'message': _('Estatus Actualizado: %s') % status,
+                'type': type_msg,
+                'sticky': False,
+            }
+        }
+
+    def _check_sat_status(self, rfc_emisor, rfc_receptor, total, uuid):
+        """Helper para consultar SAT (copiado de wizard para independencia)."""
+        import requests
+        url = 'https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaCFDIService.svc'
+        total_str = '%.6f' % abs(total)
+        soap_body = f"""<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+           <soapenv:Body>
+              <tem:Consulta>
+                 <tem:expresionImpresa>?re={rfc_emisor}&amp;rr={rfc_receptor}&amp;tt={total_str}&amp;id={uuid}</tem:expresionImpresa>
+              </tem:Consulta>
+           </soapenv:Body>
+        </soapenv:Envelope>"""
+        headers = {'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'http://tempuri.org/IConsultaCFDIService/Consulta'}
+        try:
+            response = requests.post(url, data=soap_body, headers=headers, timeout=5)
+            if 'Vigente' in response.text: return 'valid'
+            if 'Cancelado' in response.text: return 'cancelled'
+            if 'No Encontrado' in response.text: return 'not_found'
+            return 'error'
+        except:
+            return 'error'

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_building_cfdi_load_wizard_form" model="ir.ui.view">
+        <field name="name">building.cfdi.load.wizard.form</field>
+        <field name="model">building.cfdi.load.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cargar XML CFDI">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fa fa-info-circle"/>
+                        Seleccione el archivo XML de la factura. El sistema validará automáticamente ante el SAT y pre-llenará los datos.
+                    </div>
+                    <field name="move_id" invisible="1"/>
+                    <group>
+                        <field name="xml_file" filename="xml_filename" widget="binary"/>
+                        <field name="xml_filename" invisible="1"/>
+                    </group>
+
+                    <!-- Preview Section -->
+                    <group string="Vista Previa" invisible="not preview_uuid">
+                        <group>
+                            <field name="preview_uuid"/>
+                            <field name="preview_rfc"/>
+                            <field name="preview_nombre"/>
+                        </group>
+                        <group>
+                            <field name="preview_total" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="preview_fecha"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Cargar y Validar" name="action_load_and_validate" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
