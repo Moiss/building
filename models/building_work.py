@@ -347,6 +347,21 @@ class BuildingWork(models.Model):
         for work in self:
             work.stage_count = len(work.stage_ids)
 
+    has_active_consolidated = fields.Boolean(
+        string='Tiene Consolidado Activo',
+        compute='_compute_has_active_consolidated',
+    )
+
+    @api.depends('budget_ids', 'budget_ids.active', 'budget_ids.budget_type')
+    def _compute_has_active_consolidated(self):
+        """Verifica si la obra tiene un presupuesto consolidado activo."""
+        for work in self:
+            # Filtramos en python para asegurar que reacciona a cambios en memoria/cache
+            consolidated = work.budget_ids.filtered(
+                lambda b: b.budget_type == 'consolidated' and b.active
+            )
+            work.has_active_consolidated = bool(consolidated)
+
     @api.depends('budget_ids')
     def _compute_budget_count(self):
         """Cuenta el número de presupuestos."""
