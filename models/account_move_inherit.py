@@ -48,7 +48,11 @@ class AccountMoveBuilding(models.Model):
             allocated = sum(move.building_allocation_ids.filtered(
                 lambda a: a.state == 'active'
             ).mapped('amount_total'))
-            move.is_fully_allocated = allocated >= (move.amount_total - 0.01)
+            # Solo si el monto total es > 0 y coincide
+            if move.amount_total > 0:
+                move.is_fully_allocated = allocated >= (move.amount_total - 0.01)
+            else:
+                move.is_fully_allocated = False
 
     @api.depends('building_allocation_ids', 'building_allocation_ids.amount_total')
     def _compute_building_allocation_count(self):
@@ -112,6 +116,8 @@ class AccountMoveBuilding(models.Model):
     l10n_mx_cfdi_forma_pago = fields.Char(string='Forma Pago', readonly=True)
     l10n_mx_cfdi_metodo_pago = fields.Char(string='Método Pago', readonly=True)
     l10n_mx_cfdi_rfc_emisor = fields.Char(string='RFC Emisor', readonly=True)
+    l10n_mx_cfdi_rfc_receptor = fields.Char(string='RFC Receptor', readonly=True)
+    l10n_mx_cfdi_amount = fields.Monetary(string='Monto CFDI', currency_field='currency_id', readonly=True, help='Monto exacto del XML para validación')
     l10n_mx_cfdi_xml_file = fields.Binary(string='XML Original', attachment=True, copy=False)
     l10n_mx_cfdi_xml_fname = fields.Char(string='Nombre XML')
 
@@ -143,13 +149,17 @@ class AccountMoveBuilding(models.Model):
         if not self.l10n_mx_cfdi_uuid:
             raise UserError(_('No hay UUID para validar.'))
         
-        rfc_receptor = self.company_id.vat or ''
+        # Usar el RFC Receptor del XML si existe, sino el de la compañía
+        rfc_receptor = self.l10n_mx_cfdi_rfc_receptor or self.company_id.vat or ''
+        # Usar el Monto del XML si existe, sino el total de la factura
+        total_verify = self.l10n_mx_cfdi_amount if self.l10n_mx_cfdi_amount else self.amount_total
+        
         # Nota: Importamos el wizard para usar su metodo estatico o duplicamos logica
         # Mejor usar metodo auxiliar local para no depender del wizard
         status = self._check_sat_status(
             self.l10n_mx_cfdi_rfc_emisor, 
             rfc_receptor, 
-            self.amount_total, 
+            total_verify, 
             self.l10n_mx_cfdi_uuid
         )
         self.l10n_mx_cfdi_sat_status = status
@@ -157,12 +167,21 @@ class AccountMoveBuilding(models.Model):
         type_msg = 'success' if status == 'valid' else 'warning'
         if status == 'cancelled': type_msg = 'danger'
         
+        # Mapeo de Estatus a Español
+        status_labels = {
+            'valid': 'Vigente',
+            'cancelled': 'Cancelado',
+            'not_found': 'No Encontrado',
+            'error': 'Error'
+        }
+        status_label = status_labels.get(status, status)
+
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Validación SAT'),
-                'message': _('Estatus Actualizado: %s') % status,
+                'message': _('Estatus Actualizado: %s') % status_label,
                 'type': type_msg,
                 'sticky': False,
             }

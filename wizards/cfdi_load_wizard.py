@@ -46,11 +46,11 @@ class BuildingCfdiLoadWizard(models.TransientModel):
                 continue
 
             try:
-                tree = self._parse_xml(wizard.xml_file)
-                ns = self._get_namespaces(tree)
+                root = self._parse_xml(wizard.xml_file)
+                ns = self._get_namespaces(root)
                 
                 # Datos del Comprobante
-                root = tree.getroot()
+                # root = tree.getroot() <- Eliminado, root ya es el elemento
                 wizard.preview_total = float(root.get('Total', '0.0'))
                 wizard.preview_fecha = root.get('Fecha', '')
                 
@@ -79,11 +79,19 @@ class BuildingCfdiLoadWizard(models.TransientModel):
             except Exception as e:
                 _logger.error(f"Error parsing XML preview: {e}")
                 # No levantar error aquí para permitir al usuario ver que algo falló o reintentar
-                wizard.preview_uuid = 'Error al leer XML'
+                wizard.preview_uuid = f'Error al leer XML: {str(e)}'
 
     def _parse_xml(self, file_content):
         """Decodifica y parsea el archivo XML."""
         try:
+            # Asegurar bytes
+            if not isinstance(file_content, bytes):
+                # Si viene como string, puede ser data URI
+                if isinstance(file_content, str):
+                     if ',' in file_content:
+                         file_content = file_content.split(',')[1]
+                     file_content = file_content.encode('utf-8')
+
             decoded = base64.b64decode(file_content)
             # Eliminar BOM si existe
             # if decoded.startswith(b'\xef\xbb\xbf'):
@@ -92,9 +100,9 @@ class BuildingCfdiLoadWizard(models.TransientModel):
         except Exception as e:
             raise UserError(_('El archivo no es un XML válido: %s') % str(e))
 
-    def _get_namespaces(self, tree):
+    def _get_namespaces(self, root):
         """Detecta versión 3.3 o 4.0 y retorna namespaces."""
-        root = tree.getroot()
+        # root = tree.getroot() <- Eliminado
         if 'http://www.sat.gob.mx/cfd/4' in root.nsmap.values():
             return {
                 'cfdi': 'http://www.sat.gob.mx/cfd/4',
@@ -122,9 +130,9 @@ class BuildingCfdiLoadWizard(models.TransientModel):
         if not self.xml_file:
             raise UserError(_('Por favor seleccione un archivo XML.'))
 
-        tree = self._parse_xml(self.xml_file)
-        ns = self._get_namespaces(tree)
-        root = tree.getroot()
+        root = self._parse_xml(self.xml_file)
+        ns = self._get_namespaces(root)
+        # root = tree.getroot() <- Eliminado
 
         # 1. Extraer Datos
         try:
@@ -253,9 +261,11 @@ class BuildingCfdiLoadWizard(models.TransientModel):
             invoice_lines.append((0, 0, line_vals))
 
         # Actualizar Invoice
+        # Actualizar Invoice
         vals = {
             'partner_id': partner.id,
             'ref': f"{serie}{folio}".strip() or uuid[:8],
+            'payment_reference': f"{serie}{folio}".strip() or uuid[:8], # Copiar Referencia a Referencia de Pago
             'invoice_date': fecha_cfdi.date(),
             'currency_id': currency.id,
             'invoice_line_ids': invoice_lines,
@@ -264,9 +274,11 @@ class BuildingCfdiLoadWizard(models.TransientModel):
             'l10n_mx_cfdi_sat_status': sat_status,
             'l10n_mx_cfdi_folio': f"{serie}{folio}".strip(),
             'l10n_mx_cfdi_fecha': fecha_cfdi,
+            'l10n_mx_cfdi_amount': total,
             'l10n_mx_cfdi_forma_pago': forma_pago,
             'l10n_mx_cfdi_metodo_pago': metodo_pago,
             'l10n_mx_cfdi_rfc_emisor': rfc_emisor,
+            'l10n_mx_cfdi_rfc_receptor': rfc_receptor,
             'l10n_mx_cfdi_xml_fname': self.xml_filename or 'cfdi.xml',
         }
         

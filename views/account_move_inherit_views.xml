@@ -26,7 +26,7 @@
                     <i class="fa fa-info-circle"/>
                     Esta factura tiene distribuciones parciales a obras.
                 </div>
-                <div class="alert alert-success" role="alert" style="margin-bottom: 20px;" invisible="not is_fully_allocated">
+                <div class="alert alert-success" role="alert" style="margin-bottom: 20px;" invisible="not is_fully_allocated or state != 'posted'">
                     <i class="fa fa-check-circle"/>
                     Factura completamente distribuida a obras.
                 </div>
@@ -39,6 +39,8 @@
                         <field name="l10n_mx_cfdi_uuid"/>
                         <field name="l10n_mx_cfdi_folio"/>
                         <field name="l10n_mx_cfdi_rfc_emisor"/>
+                        <field name="l10n_mx_cfdi_rfc_receptor" groups="base.group_no_one"/>
+                        <field name="l10n_mx_cfdi_amount" groups="base.group_no_one"/>
                     </group>
                     <group>
                         <field name="l10n_mx_cfdi_sat_status" widget="badge" decoration-success="l10n_mx_cfdi_sat_status == 'valid'" decoration-danger="l10n_mx_cfdi_sat_status == 'cancelled'" decoration-warning="l10n_mx_cfdi_sat_status in ('not_found','error')" decoration-muted="l10n_mx_cfdi_sat_status == 'not_checked'"/>
