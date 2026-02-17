@@ -761,17 +761,45 @@ class BuildingWork(models.Model):
                 'company_id': self.company_id.id,
             })
         
-        # 3. Crear cuentas hijas (Partidas de presupuestos validados)
+        # 3. Crear o Actualizar cuentas hijas (Partidas de presupuestos validados)
         # Filtramos solo presupuestos validados y NO consolidados
         budgets = self.budget_ids.filtered(
             lambda b: b.state == 'validated' and b.budget_type != 'consolidated'
         )
         
+        updated_count = 0
         created_count = 0
         for line in budgets.mapped('chapter_ids.line_ids'):
-            if not line.analytic_account_id:
-                # Nombre: OBRA / CODIGO NOMBRE
-                name = "%s / %s %s" % (self.name, line.code or '', line.name or '')
+            # Formato: OBRA / [PRESUPUESTO] CAP.CODIGO NOMBRE
+            # Ejemplo: CASA DEMO / [Presupuesto Base] A.001 Trazo - Presupuesto Base
+            # Ajuste solicitado: CASA DEMO / CAP.CODIGO NOMBRE - PRESUPUESTO
+            
+            # Construir nombre descriptivo
+            chapter_code = line.chapter_id.code or 'UNKNOWN'
+            line_code = line.code or 'UNKNOWN'
+            line_name = line.name or 'Sin Nombre'
+            budget_name = line.budget_id.name or 'Sin Presupuesto'
+            
+            # Formato corto sugerido: OBRA / CAP.COD NOMBRE - PRESUPUESTO
+            name = "%s / %s.%s %s - %s" % (
+                self.name, 
+                chapter_code, 
+                line_code, 
+                line_name, 
+                budget_name
+            )
+            
+            # Validar longitud (Odoo suele tener limite de 128 o 256 chars en name)
+            if len(name) > 100:
+                name = name[:97] + "..."
+
+            if line.analytic_account_id:
+                # Si ya existe, actualizamos el nombre (Renombrar)
+                if line.analytic_account_id.name != name:
+                    line.analytic_account_id.name = name
+                    updated_count += 1
+            else:
+                # Crear nueva
                 line.analytic_account_id = self.env['account.analytic.account'].create({
                     'name': name,
                     'plan_id': plan.id,
@@ -779,5 +807,11 @@ class BuildingWork(models.Model):
                 })
                 created_count += 1
         
-        if created_count > 0:
-            self.message_post(body=_("Se generaron %s cuentas analíticas para partidas.") % created_count)
+        msg = []
+        if created_count:
+            msg.append(_("%s cuentas creadas") % created_count)
+        if updated_count:
+            msg.append(_("%s cuentas actualizadas") % updated_count)
+            
+        if msg:
+            self.message_post(body=_("Generación de Analítica: ") + ", ".join(msg) + ".")
