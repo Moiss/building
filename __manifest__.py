@@ -57,8 +57,8 @@ Roles soportados:
         'views/building_real_line_views.xml',        # FASE 3.4: Gastos Reales
         'views/work_cost_views.xml',                 # FASE 4.1: Costos Operativos
         'views/work_evidence_views.xml',             # FASE 4.2: Evidencias
-        'views/res_config_settings_views.xml',
         'views/menus.xml',
+        'views/res_config_settings_views.xml',
     ],
     'demo': [
         'data/demo.xml',
