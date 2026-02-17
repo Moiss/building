@@ -19,7 +19,10 @@
 
 
 
+    <!-- Submenú: Configuración (Contenedor) -->
+    <menuitem id="building_menu_config" name="Configuración" parent="building_menu_root" sequence="100"/>
+
     <!-- Submenú: Configuración IA -->
-    <menuitem id="building_menu_config_ai" name="Configuración IA" parent="building_menu_root" action="building_ai_config_wizard_action" sequence="100"/>
+    <menuitem id="building_menu_config_ai" name="Configuración IA" parent="building_menu_config" action="building_ai_config_wizard_action" sequence="10"/>
 
 </odoo>
