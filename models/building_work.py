@@ -775,7 +775,6 @@ class BuildingWork(models.Model):
                 line.analytic_account_id = self.env['account.analytic.account'].create({
                     'name': name,
                     'plan_id': plan.id,
-                    'parent_id': self.analytic_account_id.id,
                     'company_id': self.company_id.id,
                 })
                 created_count += 1
