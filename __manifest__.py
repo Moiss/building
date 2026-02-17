@@ -40,6 +40,9 @@ Roles soportados:
         'security/ir.model.access.csv',
         'security/ir_rule.xml',
         # Vistas
+        'views/account_move_inherit_views.xml',
+        'views/bill_allocation_views.xml',
+        'views/allocate_bill_wizard_views.xml',
         'views/building_ai_config_wizard_views.xml',
         'views/building_change_real_source_wizard_views.xml',
         'views/building_chapter_loader_wizard_views.xml',

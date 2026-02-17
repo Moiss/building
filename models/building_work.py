@@ -135,6 +135,11 @@ class BuildingWork(models.Model):
         string='# Presupuestos',
         compute='_compute_budget_count'
     )
+
+    bill_allocation_count = fields.Integer(
+        compute='_compute_bill_allocation_count',
+        string='# Facturas Aplicadas'
+    )
     
 
     # === CAMPOS COMPUTADOS AUXILIARES ===
@@ -315,6 +320,30 @@ class BuildingWork(models.Model):
         """Cuenta el número de presupuestos."""
         for work in self:
             work.budget_count = len(work.budget_ids)
+
+    def _compute_bill_allocation_count(self):
+        """Cuenta distribuciones de factura activas para esta obra."""
+        for work in self:
+            work.bill_allocation_count = self.env['building.bill.allocation.line'].search_count([
+                ('work_id', '=', work.id),
+                ('allocation_id.state', '=', 'active'),
+            ])
+
+    def action_view_bill_allocations(self):
+        """Ver distribuciones de factura para esta obra."""
+        self.ensure_one()
+        alloc_lines = self.env['building.bill.allocation.line'].search([
+            ('work_id', '=', self.id),
+            ('allocation_id.state', '=', 'active'),
+        ])
+        alloc_ids = alloc_lines.mapped('allocation_id').ids
+        return {
+            'name': _('Facturas Aplicadas - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.bill.allocation',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', alloc_ids)],
+        }
 
 
     @api.depends('alert_ids', 'alert_ids.is_active')

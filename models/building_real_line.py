@@ -81,6 +81,15 @@ class BuildingRealLine(models.Model):
         store=True
     )
 
+    bill_allocation_id = fields.Many2one(
+        'building.bill.allocation',
+        string='Distribución Factura',
+        ondelete='set null',
+        index=True,
+        readonly=True,
+        help='Distribución de factura que generó este gasto real'
+    )
+
     # === MIGRACIÓN ===
     is_migrated = fields.Boolean(
         string='Migrado a Contabilidad',

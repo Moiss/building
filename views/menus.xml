@@ -14,6 +14,9 @@
     <!-- Submenú: Etapas -->
     <menuitem id="building_menu_stages" name="Etapas / Frentes" parent="building_menu_root" action="building_work_stage_action" sequence="20"/>
 
+    <!-- Submenú: Facturas -> Obras -->
+    <menuitem id="menu_bill_allocations" name="Facturas → Obras" parent="building_menu_root" action="action_building_bill_allocation" sequence="25"/>
+
 
 
     <!-- Submenú: Configuración IA -->

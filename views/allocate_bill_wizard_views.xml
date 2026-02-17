@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_building_allocate_bill_wizard_form" model="ir.ui.view">
+        <field name="name">building.allocate.bill.wizard.form</field>
+        <field name="model">building.allocate.bill.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Aplicar Factura a Obra">
+                <sheet>
+                    <field name="currency_id" invisible="1"/>
+
+                    <div class="alert alert-info" role="alert" invisible="not has_previous_allocation">
+                        <i class="fa fa-info-circle"/>
+ Esta factura ya tiene distribuciones previas por 
+                        <field name="previous_allocated_amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="move_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="amount_total" widget="monetary"/>
+                        </group>
+                    </group>
+
+                    <group col="3">
+                        <group>
+                            <field name="amount_distributed" widget="monetary"/>
+                        </group>
+                        <group>
+                            <field name="amount_pending" widget="monetary" decoration-danger="amount_pending &lt; 0"/>
+                        </group>
+                        <group>
+                            <div invisible="not is_fully_distributed" class="text-success">
+                                <i class="fa fa-check-circle"/>
+ Completa
+                            </div>
+                        </group>
+                    </group>
+
+                    <field name="line_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="work_id"/>
+                            <field name="budget_id" options="{'no_create': True}"/>
+                            <field name="budget_line_id" options="{'no_create': True}"/>
+                            <field name="distribution_type"/>
+                            <field name="percent" invisible="distribution_type != 'percent'"/>
+                            <field name="amount" widget="monetary"/>
+                            <field name="description"/>
+                            <field name="currency_id" invisible="1"/>
+                        </list>
+                    </field>
+                </sheet>
+                <footer>
+                    <button name="action_confirm" string="Confirmar" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

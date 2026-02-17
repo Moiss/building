@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # Modelos del módulo building_dashboard
 
+from . import account_move_inherit
+from . import bill_allocation
+
 from . import building_work
 from . import building_work_stage
 from . import building_work_alert

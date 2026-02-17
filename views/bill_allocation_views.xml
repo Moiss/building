@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- FORM VIEW -->
+    <record id="view_building_bill_allocation_form" model="ir.ui.view">
+        <field name="name">building.bill.allocation.form</field>
+        <field name="model">building.bill.allocation</field>
+        <field name="arch" type="xml">
+            <form string="Distribución de Factura">
+                <header>
+                    <button name="action_cancel" string="Cancelar Distribución" type="object" confirm="¿Está seguro de cancelar? Se eliminarán los gastos reales generados." invisible="state != 'active'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_real_lines" type="object" class="oe_stat_button" icon="fa-money" invisible="real_line_count == 0">
+                            <field name="real_line_count" widget="statinfo" string="Gastos Reales"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="move_id"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="company_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="date"/>
+                            <field name="move_amount_total" widget="monetary"/>
+                            <field name="amount_total" widget="monetary" decoration-bf="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Líneas de Distribución">
+                            <field name="line_ids" readonly="1">
+                                <list decoration-muted="parent.state == 'cancelled'">
+                                    <field name="work_id"/>
+                                    <field name="budget_id"/>
+                                    <field name="budget_line_id"/>
+                                    <field name="description"/>
+                                    <field name="amount" widget="monetary"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- LIST VIEW -->
+    <record id="view_building_bill_allocation_tree" model="ir.ui.view">
+        <field name="name">building.bill.allocation.list</field>
+        <field name="model">building.bill.allocation</field>
+        <field name="arch" type="xml">
+            <list string="Distribuciones" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="move_id"/>
+                <field name="move_amount_total" widget="monetary" string="Total Factura"/>
+                <field name="amount_total" widget="monetary" sum="Total Distribuido"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'" decoration-muted="state == 'cancelled'"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- SEARCH VIEW -->
+    <record id="view_building_bill_allocation_search" model="ir.ui.view">
+        <field name="name">building.bill.allocation.search</field>
+        <field name="model">building.bill.allocation</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="move_id"/>
+                <field name="partner_id"/>
+                <!-- <field name="line_ids" filter_domain="[('line_ids.work_id.name', 'ilike', self)]" string="Obra"/> -->
+
+                <filter string="Activas" name="active" domain="[('state', '=', 'active')]"/>
+                <filter string="Canceladas" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_building_bill_allocation" model="ir.actions.act_window">
+        <field name="name">Facturas → Obras</field>
+        <field name="res_model">building.bill.allocation</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_building_bill_allocation_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay distribuciones de facturas registradas.
+            </p>
+            <p>
+                Las distribuciones se crean desde la Factura de Proveedor confirmada, usando el botón "Aplicar a Obra".
+            </p>
+        </field>
+    </record>
+
+</odoo>
