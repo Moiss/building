@@ -86,7 +86,7 @@
 
                 <filter string="Activas" name="active" domain="[('state', '=', 'active')]"/>
                 <filter string="Canceladas" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
-                <group expand="0" string="Agrupar Por">
+                <group string="Agrupar Por">
                     <filter string="Proveedor" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Factura" name="group_move" context="{'group_by': 'move_id'}"/>
                     <filter string="Fecha" name="group_date" context="{'group_by': 'date'}"/>
