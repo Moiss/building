@@ -73,7 +73,7 @@
                             <field name="currency_id" invisible="1"/>
                             <field name="analytic_account_id" readonly="1" invisible="not has_analytic"/>
                             <field name="has_analytic" invisible="1"/>
-                            <field name="has_active_consolidated" invisible="1"/>
+                            <field name="has_active_consolidated"/>
                             <field name="show_generate_analytics_button" invisible="1"/>
                         </group>
                     </group>
