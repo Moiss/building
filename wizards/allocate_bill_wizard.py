@@ -135,6 +135,26 @@ class BuildingAllocateBillWizard(models.TransientModel):
                 'description': line.description,
                 'amount': line.amount,
             })
+            
+            # --- INTEGRACIÓN ANALÍTICA (Etapa 4.4b) ---
+            use_analytic = self.env['ir.config_parameter'].sudo().get_param('building.use_analytic', 'False') == 'True'
+            if use_analytic and line.work_id and line.work_id.analytic_account_id:
+                analytic_account = False
+                if line.budget_line_id and line.budget_line_id.analytic_account_id:
+                    analytic_account = line.budget_line_id.analytic_account_id
+                else:
+                    analytic_account = line.work_id.analytic_account_id
+
+                if analytic_account:
+                    self.env['account.analytic.line'].create({
+                        'name': 'Fact. %s - %s' % (self.move_id.name, line.description or self.partner_id.name or 'Gasto'),
+                        'account_id': analytic_account.id,
+                        'date': fields.Date.context_today(self),
+                        'amount': -line.amount,  # Gasto es negativo
+                        'ref': '%s - %s' % (self.move_id.name, allocation.name),
+                        'company_id': self.move_id.company_id.id,
+                        'building_allocation_id': allocation.id, 
+                    })
         
         # 3. Generar gastos reales (building.real.line)
         for line in self.line_ids:

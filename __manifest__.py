@@ -33,6 +33,7 @@ Roles soportados:
         'mail',
         'web',
         'account',
+        'analytic',
     ],
     'data': [
         # Seguridad (primero)

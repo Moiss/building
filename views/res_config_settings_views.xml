@@ -1,71 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- ============================================================= -->
-    <!-- VISTAS - res.config.settings (Ajustes)                         -->
-    <!-- ============================================================= -->
-
-    <!-- Extensión de la vista de Ajustes Generales -->
     <record id="res_config_settings_view_form" model="ir.ui.view">
-        <field name="name">res.config.settings.view.form.building</field>
+        <field name="name">res.config.settings.view.form.inherit.building</field>
         <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <app data-string="Building Dashboard" string="Building Dashboard" name="building_dashboard" groups="building_dashboard.group_building_director,base.group_system">
-                    <block title="Configuración de Seguridad" name="building_security">
-                        <setting id="building_encryption_setting" title="Clave de Cifrado para API Keys" help="Esta clave se usa para cifrar las API Keys del Asistente IA. Es obligatoria para guardar configuraciones de IA.">
-                            <div class="content-group">
+                <app data-string="Control de Obras" string="Control de Obras" name="building_dashboard">
+                    <block title="Contabilidad Analítica" name="building_analytic_setting_container">
+                        <setting string="Contabilidad Analítica por Obra" help="Permite generar cuentas analíticas por obra y partida, y asignar gastos automáticamente.">
+                            <field name="building_use_analytic"/>
+                            <div class="content-group" invisible="not building_use_analytic">
                                 <div class="row mt16">
-                                    <label for="building_encryption_key" class="col-3 col-lg-3 o_light_label"/>
-                                    <field name="building_encryption_key" password="True" class="col-9 col-lg-6"/>
-                                </div>
-                                <div class="row mt8">
-                                    <div class="col-3"/>
-                                    <div class="col-9">
-                                        <button name="action_generate_encryption_key" type="object" string="Generar Nueva Clave" class="btn-secondary" icon="fa-key" confirm="¿Está seguro? Si ya hay API Keys guardadas, deberán reconfigurarse."/>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="alert alert-warning mt-3" role="alert">
-                                <i class="fa fa-warning" title="Advertencia"/>
-                                <strong>Importante:</strong> 
-                                Si cambia o pierde esta clave, las API Keys guardadas no podrán descifrarse.
-                                Guarde esta clave en un lugar seguro.
-                            </div>
-                        </setting>
-                    </block>
-
-                    <block title="Finanzas (Presupuesto vs Real)" name="building_finance">
-                        <setting id="budget_real_thresholds" title="Umbrales de Variación" help="Semáforo para la variación de Presupuesto vs Real.">
-                            <div class="content-group">
-                                <div class="row mt16">
-                                    <label for="budget_real_threshold_warning" class="col-lg-4 o_light_label"/>
-                                    <field name="budget_real_threshold_warning" class="col-lg-2"/>
-                                </div>
-                                <div class="row mt8">
-                                    <label for="budget_real_threshold_critical" class="col-lg-4 o_light_label"/>
-                                    <field name="budget_real_threshold_critical" class="col-lg-2"/>
-                                </div>
-                            </div>
-                        </setting>
-
-                        <setting id="building_default_real_source" title="Fuente del Real (Default)" help="Fuente predeterminada para el cálculo de costos reales en nuevas obras.">
-                            <field name="building_default_real_source"/>
-                        </setting>
-
-                        <setting id="migration_accounting" title="Configuración Contable (Migración)" help="Cuentas necesarias para migrar histórico de gastos internos a contabilidad.">
-                            <div class="content-group">
-                                <div class="row mt16">
-                                    <label for="migration_journal_id" class="col-lg-4 o_light_label"/>
-                                    <field name="migration_journal_id" class="col-lg-6"/>
-                                </div>
-                                <div class="row mt8">
-                                    <label for="migration_debit_account_id" class="col-lg-4 o_light_label"/>
-                                    <field name="migration_debit_account_id" class="col-lg-6"/>
-                                </div>
-                                <div class="row mt8">
-                                    <label for="migration_credit_account_id" class="col-lg-4 o_light_label"/>
-                                    <field name="migration_credit_account_id" class="col-lg-6"/>
+                                    <label for="building_analytic_mode" class="col-lg-3 o_light_label"/>
+                                    <field name="building_analytic_mode"/>
                                 </div>
                             </div>
                         </setting>
@@ -75,4 +24,13 @@
         </field>
     </record>
 
+    <record id="action_building_config_settings" model="ir.actions.act_window">
+        <field name="name">Configuración</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'building_dashboard'}</field>
+    </record>
+
+    <menuitem id="building_menu_config_settings" name="Configuración" parent="building_menu_config" action="action_building_config_settings" sequence="0"/>
 </odoo>

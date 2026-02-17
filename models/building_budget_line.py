@@ -212,6 +212,14 @@ class BuildingBudgetLine(models.Model):
         readonly=True
     )
 
+    analytic_account_id = fields.Many2one(
+        'account.analytic.account',
+        string='Cuenta Analítica',
+        readonly=True,
+        copy=False,
+        help='Cuenta analítica hija para esta partida'
+    )
+
     # === FASE 3.3.2: SEMÁFORO FINANCIERO POR PARTIDA ===
     real_line_ids = fields.One2many(
         'building.real.line',

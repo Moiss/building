@@ -28,4 +28,5 @@ from . import building_budget_progress
 from . import work_cost
 # Evidencias (FASE 4.2)
 from . import work_evidence
+from . import res_config_settings
 

@@ -95,6 +95,12 @@ class BuildingBillAllocation(models.Model):
         compute='_compute_real_line_count'
     )
 
+    analytic_line_ids = fields.One2many(
+        'account.analytic.line',
+        'building_allocation_id',
+        string='Líneas Analíticas'
+    )
+
     @api.depends('move_id', 'move_id.name')
     def _compute_name(self):
         for alloc in self:
@@ -115,9 +121,12 @@ class BuildingBillAllocation(models.Model):
         for alloc in self:
             if alloc.state == 'cancelled':
                 raise UserError(_('Ya está cancelada.'))
-            # Eliminar gastos reales
+            # Eliminar gastos reales y analíticos
             if alloc.real_line_ids:
                 alloc.real_line_ids.unlink()
+            if alloc.analytic_line_ids:
+                alloc.analytic_line_ids.unlink()
+                
             alloc.write({'state': 'cancelled'})
             # Actualizar flag en factura
             remaining = alloc.move_id.building_allocation_ids.filtered(

@@ -51,6 +51,38 @@ class BuildingWork(models.Model):
         store=True,
         readonly=True
     )
+
+    analytic_account_id = fields.Many2one(
+        'account.analytic.account',
+        string='Cuenta Analítica',
+        readonly=True,
+        copy=False
+    )
+
+    has_analytic = fields.Boolean(
+        compute='_compute_has_analytic',
+        store=True,
+    )
+
+    show_generate_analytics_button = fields.Boolean(
+        compute='_compute_show_analytics_button'
+    )
+
+    @api.depends('analytic_account_id')
+    def _compute_has_analytic(self):
+        for work in self:
+            work.has_analytic = bool(work.analytic_account_id)
+
+    def _compute_show_analytics_button(self):
+        use = self.env['ir.config_parameter'].sudo().get_param(
+            'building.use_analytic', 'False'
+        ) == 'True'
+        mode = self.env['ir.config_parameter'].sudo().get_param(
+            'building.analytic_mode', 'both'
+        )
+        show = use and mode in ('manual', 'both')
+        for work in self:
+            work.show_generate_analytics_button = show and not work.has_analytic
     
     # === KPIs COMPUTADOS (FASE 3.1 FIX) ===
     # Presupuesto Total: del presupuesto validado (o borrador más reciente)
@@ -676,3 +708,62 @@ class BuildingWork(models.Model):
                 if not active_stages and work.stage_ids:
                     work.write({'state': 'done'})
                     work.message_post(body=_("¡Todas las etapas han concluido! La obra ha sido marcada como Finalizada."))
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        works = super().create(vals_list)
+        for work in works:
+            work._create_analytics_if_configured()
+        return works
+
+    def _create_analytics_if_configured(self):
+        """Crea analíticas si la configuración lo indica (auto/both)."""
+        use = self.env['ir.config_parameter'].sudo().get_param(
+            'building.use_analytic', 'False'
+        )
+        mode = self.env['ir.config_parameter'].sudo().get_param(
+            'building.analytic_mode', 'both'
+        )
+        if use == 'True' and mode in ('auto', 'both'):
+            self.action_generate_analytics()
+
+    def action_generate_analytics(self):
+        """Genera plan + cuenta padre (obra) + cuentas hijas (partidas)."""
+        self.ensure_one()
+        
+        # 1. Obtener/Crear Plan
+        plan = self.env['account.analytic.plan'].search(
+            [('name', '=', 'Control de Obras')], limit=1
+        )
+        if not plan:
+            plan = self.env['account.analytic.plan'].create({'name': 'Control de Obras'})
+        
+        # 2. Crear cuenta padre (Obra)
+        if not self.analytic_account_id:
+            self.analytic_account_id = self.env['account.analytic.account'].create({
+                'name': self.name,
+                'plan_id': plan.id,
+                'company_id': self.company_id.id,
+            })
+        
+        # 3. Crear cuentas hijas (Partidas de presupuestos validados)
+        # Filtramos solo presupuestos validados y NO consolidados
+        budgets = self.budget_ids.filtered(
+            lambda b: b.state == 'validated' and b.budget_type != 'consolidated'
+        )
+        
+        created_count = 0
+        for line in budgets.mapped('chapter_ids.line_ids'):
+            if not line.analytic_account_id:
+                # Nombre: OBRA / CODIGO NOMBRE
+                name = "%s / %s %s" % (self.name, line.code or '', line.name or '')
+                line.analytic_account_id = self.env['account.analytic.account'].create({
+                    'name': name,
+                    'plan_id': plan.id,
+                    'parent_id': self.analytic_account_id.id,
+                    'company_id': self.company_id.id,
+                })
+                created_count += 1
+        
+        if created_count > 0:
+            self.message_post(body=_("Se generaron %s cuentas analíticas para partidas.") % created_count)

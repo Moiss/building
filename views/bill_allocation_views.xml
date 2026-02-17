@@ -82,10 +82,15 @@
                 <field name="name"/>
                 <field name="move_id"/>
                 <field name="partner_id"/>
-                <!-- <field name="line_ids" filter_domain="[('line_ids.work_id.name', 'ilike', self)]" string="Obra"/> -->
+                <field name="line_ids" string="Obra/Partida" filter_domain="['|', ('line_ids.work_id', 'ilike', self), ('line_ids.budget_line_id', 'ilike', self)]"/>
 
                 <filter string="Activas" name="active" domain="[('state', '=', 'active')]"/>
                 <filter string="Canceladas" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Proveedor" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Factura" name="group_move" context="{'group_by': 'move_id'}"/>
+                    <filter string="Fecha" name="group_date" context="{'group_by': 'date'}"/>
+                </group>
             </search>
         </field>
     </record>

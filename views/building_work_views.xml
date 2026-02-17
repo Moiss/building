@@ -12,6 +12,9 @@
             <form string="Dashboard de Obra">
                 <header>
                     <button name="action_start_execution" type="object" string="▶ Iniciar Ejecución" class="oe_highlight" invisible="state != 'planning'"/>
+
+                    <button name="action_generate_analytics" string="Generar Analítica" type="object" class="btn-secondary" invisible="not show_generate_analytics_button" confirm="Esto generará cuentas analíticas para la obra y sus partidas. ¿Desea continuar?"/>
+
                     <button name="action_open_consolidate_wizard" type="object" string="Consolidar Presupuestos" icon="fa-compress" class="oe_highlight" invisible="budget_count &lt; 2"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,planning,running,done"/>
                 </header>
@@ -68,6 +71,9 @@
                         <group>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="currency_id" invisible="1"/>
+                            <field name="analytic_account_id" readonly="1" invisible="not has_analytic"/>
+                            <field name="has_analytic" invisible="1"/>
+                            <field name="show_generate_analytics_button" invisible="1"/>
                         </group>
                     </group>
 
