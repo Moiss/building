@@ -15,7 +15,7 @@
 
                     <button name="action_generate_analytics" string="Generar Analítica" type="object" class="btn-secondary" invisible="not show_generate_analytics_button" confirm="Esto generará cuentas analíticas para la obra y sus partidas. ¿Desea continuar?"/>
 
-                    <button name="action_open_consolidate_wizard" type="object" string="Consolidar Presupuestos" icon="fa-compress" class="oe_highlight" invisible="budget_count &lt; 2"/>
+                    <button name="action_open_consolidate_wizard" type="object" string="Consolidar Presupuestos" icon="fa-compress" class="oe_highlight" invisible="budget_count &lt; 2 or has_active_consolidated"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,planning,running,done"/>
                 </header>
                 <sheet>
@@ -73,7 +73,7 @@
                             <field name="currency_id" invisible="1"/>
                             <field name="analytic_account_id" readonly="1" invisible="not has_analytic"/>
                             <field name="has_analytic" invisible="1"/>
-                            <field name="has_active_consolidated"/>
+                            <field name="has_active_consolidated" invisible="1"/>
                             <field name="show_generate_analytics_button" invisible="1"/>
                         </group>
                     </group>
