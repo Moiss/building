@@ -33,46 +33,11 @@ class BuildingFinancialEngine(models.AbstractModel):
             
         RealLine = self.env['building.real.line']
         
-        # 1. FUENTE INTERNA (Plan A)
-        # Sumar todas las no migradas.
-        # Si fuente es Accounting, sumar solo las pre-corte (que conceptualmente son historicas no migradas o migradas)
-        # NOTA: Si hubo migración, las lineas tienen is_migrated=True.
-        # El motor debe decidir: ¿Sumamos is_migrated?
-        # NO. Si is_migrated=True, se asume que YA están en contabilidad (account.move).
-        # Por tanto, si leemos de contabilidad, ya vendrán ahí.
-        
-        # Si real_source = 'internal':
-        #   Sumar TODAS las internas activo (no borradas). (is_migrated debería ser False siempre, salvo glitch)
-        
-        # Si real_source = 'accounting':
-        #   A) Sumar Contabilidad (account.move.line)
-        #   B) Sumar Internas que NO han sido migradas y fecha < corte (caso "Solo Corte").
-        
-        internal_domain = domain + []
-        
-        if work.real_source == 'internal':
-             # Plan A puro: Todo lo interno vale
-             pass
-        else:
-             # Plan B: Contabilidad Activada
-             # Excluir las migradas (porque se sumaran via asientos)
-             internal_domain.append(('is_migrated', '=', False))
-             
-             # Adicionalmente, si hay fecha de corte, asegurar que no sumamos cosas futuras por error
-             if work.real_cutover_date:
-                 internal_domain.append(('date', '<', work.real_cutover_date))
-
         # Agrupar por budget_line_id
         # _read_group es lo más eficiente (Odoo 19)
-        groups = RealLine._read_group(internal_domain, groupby=['budget_line_id'], aggregates=['amount:sum'])
+        groups = RealLine._read_group(domain, groupby=['budget_line_id'], aggregates=['amount:sum'])
         
         real_amounts_by_line = {rec.id: (amount_sum or 0.0) for rec, amount_sum in groups}
-        
-        # 2. FUENTE CONTABLE (Plan B)
-        if work.real_source == 'accounting':
-            # TODO: Implementar query a account.move.line
-            # Por ahora retorna 0 + lo interno válido (Solo Corte)
-            pass
             
         return real_amounts_by_line
 
@@ -109,11 +74,6 @@ class BuildingFinancialEngine(models.AbstractModel):
         RealLine = self.env['building.real.line']
         real_domain = [('work_id', '=', work.id), ('stage_id', 'in', stages.ids)]
         
-        # Lógica de fuente (copiada de get_real_amounts simplificada)
-        if work.real_source == 'accounting':
-             real_domain.append(('is_migrated', '=', False))
-             if work.real_cutover_date:
-                 real_domain.append(('date', '<', work.real_cutover_date))
         
         real_groups = RealLine._read_group(
             real_domain,

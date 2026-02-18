@@ -3,7 +3,7 @@
 # Dashboard de Obra para OdooBuilding con integración IA (Gemini + OpenAI)
 {
     'name': 'Control de Obras',
-    'version': '19.0.1.0.0',
+    'version': '19.0.1.0.1',
     'summary': 'Dashboard de Obra: Presupuesto vs Real, Etapas y Control Operativo — con IA Integrada',
     'description': """
 OdooBuilding - Dashboard Principal de Obra
@@ -45,7 +45,6 @@ Roles soportados:
         'views/bill_allocation_views.xml',
         'views/allocate_bill_wizard_views.xml',
         'views/building_ai_config_wizard_views.xml',
-        'views/building_change_real_source_wizard_views.xml',
         'views/building_chapter_loader_wizard_views.xml',
         'views/consolidate_budget_wizard_views.xml',
         'views/building_work_views.xml',
@@ -60,6 +59,7 @@ Roles soportados:
         'views/menus.xml',
         'views/res_config_settings_views.xml',
         'views/cfdi_load_wizard_views.xml',
+        'views/parametric_report_wizard_views.xml',
     ],
     'demo': [
         'data/demo.xml',

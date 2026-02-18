@@ -219,7 +219,7 @@ class BuildingWorkStage(models.Model):
     ], string='Semáforo', compute='_compute_financial_data', store=True)
     is_over_budget = fields.Boolean(compute='_compute_financial_data', store=True)
 
-    @api.depends('budget_line_ids.amount', 'real_line_ids.amount', 'work_id.real_source')
+    @api.depends('budget_line_ids.amount', 'real_line_ids.amount')
     def _compute_financial_data(self):
         """
         Calcula semáforos financieros delegando al Engine.

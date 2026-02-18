@@ -258,7 +258,7 @@ class BuildingBudgetLine(models.Model):
         ('red', 'Excedido'),
     ], string='Semáforo', compute='_compute_financial_data', store=True)
 
-    @api.depends('amount', 'real_line_ids.amount', 'work_id.real_source')
+    @api.depends('amount', 'real_line_ids.amount')
     def _compute_financial_data(self):
         """
         Calcula métricas financieras y semáforo.

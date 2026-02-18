@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_building_parametric_report_wizard_form" model="ir.ui.view">
+        <field name="name">building.parametric.report.wizard.form</field>
+        <field name="model">building.parametric.report.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reporte Paramétrico">
+                <sheet>
+                    <div class="o_horizontal_separator">Configuración del Reporte</div>
+                    <group>
+                        <group>
+                            <field name="work_id" options="{'no_open': True}"/>
+                            <field name="budget_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="period_type" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                        <group string="Columnas a Incluir">
+                            <field name="col_budgeted"/>
+                            <field name="col_advance"/>
+                            <field name="col_budgeted_accum"/>
+                            <field name="col_executed"/>
+                            <field name="col_executed_accum" invisible="not col_executed"/>
+                            <field name="col_difference" invisible="not col_executed"/>
+                        </group>
+                    </group>
+
+                    <group invisible="not excel_file">
+                        <field name="excel_filename" invisible="1"/>
+                        <field name="excel_file" widget="binary" filename="excel_filename" readonly="1"/>
+                    </group>
+
+                    <notebook invisible="not html_content">
+                        <page string="Vista Previa">
+                            <field name="html_content" widget="html" options="{'style-inline': true}"/>
+                        </page>
+                    </notebook>
+
+                    <footer>
+                        <button name="action_generate_report" string="Generar Vista Previa" type="object" class="btn-primary"/>
+                        <button name="action_download_excel" string="Descargar Excel" type="object" class="btn-secondary" icon="fa-download"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_building_parametric_report_wizard" model="ir.actions.act_window">
+        <field name="name">Reporte Paramétrico</field>
+        <field name="res_model">building.parametric.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

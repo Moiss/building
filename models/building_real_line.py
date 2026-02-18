@@ -153,22 +153,10 @@ class BuildingRealLine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            # Auto-asignar etapa si falta
             if 'budget_line_id' in vals and not vals.get('stage_id'):
                 budget_line = self.env['building.budget.line'].browse(vals['budget_line_id'])
                 if budget_line.stage_id:
                     vals['stage_id'] = budget_line.stage_id.id
-
-            if 'work_id' in vals:
-                work = self.env['building.work'].browse(vals['work_id'])
-                # Bloquear captura interna si la fuente es contable y fecha > fecha corte
-                if work.real_source == 'accounting' and work.real_cutover_date:
-                    date_val = fields.Date.from_string(vals.get('date', fields.Date.context_today(self)))
-                    if date_val >= work.real_cutover_date:
-                         raise UserError(_(
-                            'No se pueden crear registros internos con fecha posterior al corte (%s) '
-                            'porque la obra usa fuente Contable.'
-                        ) % work.real_cutover_date)
         records = super().create(vals_list)
         # Regenerar alertas de las obras afectadas (Regla 2: Gasto > Avance)
         works = records.mapped('work_id')

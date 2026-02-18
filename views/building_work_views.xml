@@ -5,7 +5,7 @@
     <!-- ============================================================= -->
 
     <!-- Vista Form: Dashboard Principal -->
-    <record id="building_work_view_form" model="ir.ui.view">
+    <record id="building_work_view_form_clean" model="ir.ui.view">
         <field name="name">building.work.form.dashboard</field>
         <field name="model">building.work</field>
         <field name="arch" type="xml">
@@ -59,6 +59,14 @@
                                 <span class="o_stat_text">Evidencias</span>
                             </div>
                         </button>
+
+                        <!-- Smart Button Reporte Paramétrico (Etapa 4.7) -->
+                        <button name="action_open_parametric_report" type="object" class="oe_stat_button" icon="fa-table">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Reporte</span>
+                                <span class="o_stat_text">Paramétrico</span>
+                            </div>
+                        </button>
                     </div>
                     <div class="oe_title">
                         <label for="name"/>
@@ -69,6 +77,7 @@
 
                     <group>
                         <group>
+                            <field name="work_type" widget="radio" options="{'horizontal': true}"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="currency_id" invisible="1"/>
                             <field name="analytic_account_id" readonly="1" invisible="not has_analytic"/>
@@ -356,22 +365,53 @@
                             </field>
                         </page>
 
-                        <page string="Presupuesto vs Real" name="budget_vs_real">
+
+
+                        <page string="Contrato / Obra Pública" name="public_work_contract" invisible="work_type != 'public'">
                             <group>
-                                <group string="Configuración de Real">
-                                    <field name="real_source" widget="radio" readonly="state == 'done' or real_source != 'internal'"/>
-                                    <field name="real_cutover_date" invisible="real_source == 'internal'" readonly="1"/>
-                                    <button name="%(action_building_change_real_source_wizard)d" string="Asistente de Migración" type="action" class="btn-link" icon="fa-cogs" groups="building_dashboard.group_building_manager"/>
+                                <group string="Datos del Contrato">
+                                    <field name="contract_number"/>
+                                    <field name="public_work_key"/>
+                                    <field name="contract_type"/>
+                                    <label for="contract_date_start" string="Vigencia"/>
+                                    <div class="o_row">
+                                        <field name="contract_date_start" widget="daterange" options="{'related_end_date': 'contract_date_end'}"/>
+                                        <i class="fa fa-long-arrow-right mx-2" title="Hasta"/>
+                                        <field name="contract_date_end" widget="daterange" options="{'related_start_date': 'contract_date_start'}"/>
+                                    </div>
                                 </group>
-                                <group string="Resumen Global">
-                                    <field name="budget_total" widget="monetary"/>
-                                    <button name="%(action_building_real_line)d" string="Ver Gastos Internos" type="action" class="btn-primary" icon="fa-list" context="{'search_default_work_id': id, 'default_work_id': id}"/>
+                                <group string="Duración y Avance">
+                                    <field name="contract_days"/>
+                                    <field name="contract_days_remaining"/>
+                                    <field name="contract_progress" widget="progressbar"/>
                                 </group>
                             </group>
-
-                            <div class="alert alert-info" role="alert" invisible="real_source == 'internal'">
-                                <i class="fa fa-info-circle" title="Información"/>
-                                <strong>Fuente Contable:</strong> Los datos reales se obtienen de la contabilidad a partir de la fecha de corte.
+                            <separator string="Fianzas y Garantías"/>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <group string="Anticipo">
+                                        <field name="guarantee_advance"/>
+                                        <field name="guarantee_advance_amount" invisible="not guarantee_advance"/>
+                                        <field name="guarantee_advance_date" invisible="not guarantee_advance"/>
+                                        <field name="guarantee_advance_status" widget="badge" decoration-success="guarantee_advance_status == 'active'" decoration-danger="guarantee_advance_status == 'expired'" invisible="not guarantee_advance"/>
+                                    </group>
+                                </div>
+                                <div class="col-md-4">
+                                    <group string="Cumplimiento">
+                                        <field name="guarantee_compliance"/>
+                                        <field name="guarantee_compliance_amt" invisible="not guarantee_compliance"/>
+                                        <field name="guarantee_compliance_date" invisible="not guarantee_compliance"/>
+                                        <field name="guarantee_compliance_st" widget="badge" decoration-success="guarantee_compliance_st == 'active'" decoration-danger="guarantee_compliance_st == 'expired'" invisible="not guarantee_compliance"/>
+                                    </group>
+                                </div>
+                                <div class="col-md-4">
+                                    <group string="Vicios Ocultos">
+                                        <field name="guarantee_defects"/>
+                                        <field name="guarantee_defects_amount" invisible="not guarantee_defects"/>
+                                        <field name="guarantee_defects_date" invisible="not guarantee_defects"/>
+                                        <field name="guarantee_defects_status" widget="badge" decoration-success="guarantee_defects_status == 'active'" decoration-danger="guarantee_defects_status == 'expired'" invisible="not guarantee_defects"/>
+                                    </group>
+                                </div>
                             </div>
                         </page>
 
@@ -411,6 +451,7 @@
         <field name="arch" type="xml">
             <list string="Obras" multi_edit="1">
                 <field name="name"/>
+                <field name="work_type" widget="badge" decoration-info="work_type == 'public'" decoration-muted="work_type == 'private'" optional="show"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="state" widget="badge" decoration-success="state == 'running'" decoration-warning="state == 'paused'" decoration-info="state == 'draft'" decoration-muted="state == 'done'"/>
                 <field name="budget_total" widget="monetary"/>
@@ -465,9 +506,6 @@
         <field name="arch" type="xml">
             <search string="Buscar Obras">
                 <field name="name"/>
-                <field name="company_id"/>
-                <field name="overall_progress"/>
-                <separator/>
                 <filter string="En Ejecución" name="running" domain="[('state', '=', 'running')]"/>
                 <filter string="Pausadas" name="paused" domain="[('state', '=', 'paused')]"/>
                 <filter string="Finalizadas" name="done" domain="[('state', '=', 'done')]"/>
@@ -480,6 +518,7 @@
         <field name="name">Obras</field>
         <field name="res_model">building.work</field>
         <field name="view_mode">kanban,list,form</field>
+        <field name="view_id" ref="building_work_view_form_clean"/>
         <field name="search_view_id" ref="building_work_view_search"/>
         <field name="context">{'search_default_running': 1}</field>
         <field name="help" type="html">

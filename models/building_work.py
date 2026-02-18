@@ -236,19 +236,149 @@ class BuildingWork(models.Model):
         help='Monto de anticipo esperado del cliente para comparar contra anticipos planeados'
     )
 
-    # === GESTIÓN FINANCIERA (FASE 3.4) ===
-    real_source = fields.Selection([
-        ('internal', 'Interno (Plan A)'),
-        ('accounting', 'Contabilidad (Plan B)'),
-    ], string='Fuente del Real', default='internal', required=True,
-       help='Define de dónde se obtienen los costos reales.')
 
-    real_cutover_date = fields.Date(
-        string='Fecha de Corte (Migración)',
-        help='Fecha a partir de la cual se usa la Contabilidad y se bloquean registros internos anteriores.'
-    )
+
+    # === DATOS DE CONTRATO (ETAPA 4.6) ===
+    work_type = fields.Selection([
+        ('private', 'Privada'),
+        ('public', 'Pública'),
+    ], string='Tipo de Obra', default='private', required=True, tracking=True)
+
+    is_public = fields.Boolean(compute='_compute_is_public', store=False)
+
+    contract_number = fields.Char(string='Número de Contrato', tracking=True)
+    public_work_key = fields.Char(string='Clave Obra Pública', help='Ej: LO-000000-E1-2026', tracking=True)
+    contract_type = fields.Selection([
+        ('public_work', 'Obra Pública'),
+        ('invitation', 'Invitación a 3 personas'),
+        ('direct', 'Adjudicación Directa'),
+    ], string='Tipo de Contratación', tracking=True)
+
+    contract_date_start = fields.Date(string='Fecha Inicio Contrato')
+    contract_date_end = fields.Date(string='Fecha Fin Contrato')
+    
+    contract_days = fields.Integer(string='Días de Contrato', compute='_compute_contract_days')
+    contract_days_remaining = fields.Integer(string='Días Restantes', compute='_compute_contract_days_remaining')
+    contract_progress = fields.Float(string='Progreso Contrato (%)', compute='_compute_contract_progress')
+
+    # === GARANTÍAS (ETAPA 4.6) ===
+    # 1. Anticipo
+    guarantee_advance = fields.Boolean(string='Garantía de Anticipo')
+    guarantee_advance_amount = fields.Monetary(string='Monto G. Anticipo', currency_field='currency_id')
+    guarantee_advance_date = fields.Date(string='Vigencia G. Anticipo')
+    guarantee_advance_status = fields.Selection([
+        ('active', 'Vigente'),
+        ('expired', 'Vencida'),
+        ('na', 'N/A')
+    ], string='Estatus G. Anticipo', compute='_compute_guarantee_advance_status')
+
+    # 2. Cumplimiento
+    guarantee_compliance = fields.Boolean(string='Garantía de Cumplimiento')
+    guarantee_compliance_amt = fields.Monetary(string='Monto G. Cumplimiento', currency_field='currency_id')
+    guarantee_compliance_date = fields.Date(string='Vigencia G. Cumplimiento')
+    guarantee_compliance_st = fields.Selection([
+        ('active', 'Vigente'),
+        ('expired', 'Vencida'),
+        ('na', 'N/A')
+    ], string='Estatus G. Cumplimiento', compute='_compute_guarantee_compliance_st')
+
+    # 3. Vicios Ocultos
+    guarantee_defects = fields.Boolean(string='Garantía Vicios Ocultos')
+    guarantee_defects_amount = fields.Monetary(string='Monto G. Vicios', currency_field='currency_id')
+    guarantee_defects_date = fields.Date(string='Vigencia G. Vicios')
+    guarantee_defects_status = fields.Selection([
+        ('active', 'Vigente'),
+        ('expired', 'Vencida'),
+        ('na', 'N/A')
+    ], string='Estatus G. Vicios', compute='_compute_guarantee_defects_status')
 
     # === MÉTODOS COMPUTE ===
+
+    @api.depends('work_type')
+    def _compute_is_public(self):
+        for work in self:
+            work.is_public = work.work_type == 'public'
+
+    def action_open_parametric_report(self):
+        self.ensure_one()
+        return {
+            'name': _('Reporte Paramétrico - %s') % self.name,
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.parametric.report.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_work_id': self.id,
+            },
+        }
+
+    @api.depends('contract_date_start', 'contract_date_end')
+    def _compute_contract_days(self):
+        for work in self:
+            if work.contract_date_start and work.contract_date_end:
+                delta = work.contract_date_end - work.contract_date_start
+                work.contract_days = delta.days
+            else:
+                work.contract_days = 0
+
+    @api.depends('contract_date_end')
+    def _compute_contract_days_remaining(self):
+        today = fields.Date.context_today(self)
+        for work in self:
+            if work.contract_date_end:
+                delta = work.contract_date_end - today
+                work.contract_days_remaining = max(delta.days, 0)
+            else:
+                work.contract_days_remaining = 0
+
+    @api.depends('contract_date_start', 'contract_date_end')
+    def _compute_contract_progress(self):
+        today = fields.Date.context_today(self)
+        for work in self:
+            if work.contract_date_start and work.contract_date_end:
+                total = (work.contract_date_end - work.contract_date_start).days
+                if total > 0:
+                    elapsed = (today - work.contract_date_start).days
+                    # Clamp entre 0 y 100
+                    pct = (elapsed / total) * 100
+                    work.contract_progress = max(0.0, min(pct, 100.0))
+                else:
+                    work.contract_progress = 0.0
+            else:
+                work.contract_progress = 0.0
+
+    @api.depends('guarantee_advance', 'guarantee_advance_date')
+    def _compute_guarantee_advance_status(self):
+        today = fields.Date.context_today(self)
+        for work in self:
+            if not work.guarantee_advance or not work.guarantee_advance_date:
+                work.guarantee_advance_status = 'na'
+            elif work.guarantee_advance_date >= today:
+                work.guarantee_advance_status = 'active'
+            else:
+                work.guarantee_advance_status = 'expired'
+
+    @api.depends('guarantee_compliance', 'guarantee_compliance_date')
+    def _compute_guarantee_compliance_st(self):
+        today = fields.Date.context_today(self)
+        for work in self:
+            if not work.guarantee_compliance or not work.guarantee_compliance_date:
+                work.guarantee_compliance_st = 'na'
+            elif work.guarantee_compliance_date >= today:
+                work.guarantee_compliance_st = 'active'
+            else:
+                work.guarantee_compliance_st = 'expired'
+
+    @api.depends('guarantee_defects', 'guarantee_defects_date')
+    def _compute_guarantee_defects_status(self):
+        today = fields.Date.context_today(self)
+        for work in self:
+            if not work.guarantee_defects or not work.guarantee_defects_date:
+                work.guarantee_defects_status = 'na'
+            elif work.guarantee_defects_date >= today:
+                work.guarantee_defects_status = 'active'
+            else:
+                work.guarantee_defects_status = 'expired'
     
     def _get_active_budget(self):
         """Obtiene el presupuesto activo de la obra.
@@ -331,15 +461,11 @@ class BuildingWork(models.Model):
             available = work.budget_total - work.amount_committed - work.amount_paid
             work.amount_available = max(0.0, available)
 
-    @api.depends('real_source', 'real_line_ids.amount')
+    @api.depends('real_line_ids.amount')
     def _compute_amount_paid(self):
-        """Calcula el monto pagado (KPI) según la fuente configurada."""
+        """Calcula el monto pagado: suma de todos los gastos reales."""
         for work in self:
-            if work.real_source == 'internal':
-                work.amount_paid = sum(work.real_line_ids.mapped('amount'))
-            else:
-                # TODO: Integración contable
-                work.amount_paid = 0.0
+            work.amount_paid = sum(work.real_line_ids.mapped('amount'))
 
     @api.depends('stage_ids')
     def _compute_stage_count(self):

@@ -13,7 +13,7 @@ def run(env):
     try:
         Settings = env['res.config.settings']
         # Simular default_get que hace la vista
-        fields = ['building_encryption_key', 'budget_real_threshold_warning', 'building_default_real_source']
+        fields = ['building_encryption_key', 'budget_real_threshold_warning']
         defaults = Settings.default_get(fields)
         print(f"[OK] default_get exitoso. Defaults: {defaults}")
         
