@@ -49,7 +49,7 @@ class EncryptionService(models.AbstractModel):
         """
         self._check_crypto_available()
         key = self.env['ir.config_parameter'].sudo().get_param(
-            'building.encryption_key', default=False
+            'building.encryption.key', default=False
         )
         if not key:
             return None

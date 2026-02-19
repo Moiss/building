@@ -815,3 +815,44 @@ class BuildingWork(models.Model):
             
         if msg:
             self.message_post(body=_("Generación de Analítica: ") + ", ".join(msg) + ".")
+
+    def action_open_ai_assistant(self):
+        """Abre el wizard de configuración del Asistente IA."""
+        self.ensure_one()
+        return {
+            'name': _('Asistente IA — Configuración'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.ai.config.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_work_id': self.id,
+                'default_company_id': self.company_id.id,
+            },
+        }
+
+    def action_open_ai_chat(self):
+        """Abre un nuevo chat IA."""
+        chat = self.env['building.ai.chat'].create({})
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.ai.chat',
+            'res_id': chat.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_open_chapter_loader(self):
+        """Abre el wizard de Cargar Partidas (IA/Excel)."""
+        self.ensure_one()
+        return {
+            'name': _('Generador de Partidas (IA)'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.chapter.loader.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_work_id': self.id,
+                'default_budget_id': self.budget_ids[0].id if self.budget_ids else False,
+            },
+        }

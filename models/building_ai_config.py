@@ -35,6 +35,7 @@ class BuildingAIConfig(models.Model):
     
     # === CAMPOS DE CONFIGURACIÓN ===
     provider = fields.Selection([
+        ('claude', 'Claude (Anthropic)'),
         ('gemini', 'Gemini (Google)'),
         ('openai', 'ChatGPT (OpenAI)'),
     ], string='Proveedor', required=True)

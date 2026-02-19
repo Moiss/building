@@ -19,6 +19,15 @@
                             </div>
                         </setting>
                     </block>
+
+                    <block title="Seguridad" name="building_security_setting_container">
+                        <setting string="Cifrado de API Keys" help="Gestiona la clave de cifrado para proteger las credenciales de IA.">
+                            <field name="building_encryption_key" password="True"/>
+                            <div class="mt8">
+                                <button name="action_generate_encryption_key" type="object" string="Generar Clave de Cifrado" class="btn-secondary" icon="fa-key" help="Genera una nueva clave si no existe. ¡Cuidado! Si regenera la clave, las API Keys existentes dejarán de funcionar." confirm="¿Está seguro? Esto invalidará las API Keys ya cifradas."/>
+                            </div>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

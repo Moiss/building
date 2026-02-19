@@ -45,17 +45,39 @@ class BuildingAIConfigWizard(models.TransientModel):
         help='Si está activo, la configuración aplica solo a esta obra'
     )
 
-    # === CAMPOS DE GEMINI ===
+    # === CAMPOS DE CLAUDE (FEB 2026) ===
+    claude_api_key = fields.Char(
+        string='API Key (Claude)',
+        help='Ingrese su API Key de Anthropic (sk-ant-...)'
+    )
+
+    claude_model = fields.Selection([
+        ('claude-opus-4-6', 'Claude Opus 4.6 (Más inteligente)'),
+        ('claude-sonnet-4-6', 'Claude Sonnet 4.6 (Calidad/precio)'),
+        ('claude-haiku-4-5-20251001', 'Claude Haiku 4.5 (Rápido)'),
+    ], string='Modelo Claude', default='claude-sonnet-4-6')
+
+    claude_status = fields.Selection([
+        ('not_configured', 'No Configurado'),
+        ('configured', 'Configurado'),
+    ], string='Estado Claude', compute='_compute_claude_status')
+
+    claude_last4 = fields.Char(
+        string='Claude (últimos 4)',
+        compute='_compute_claude_status'
+    )
+
+    # === CAMPOS DE GEMINI (FEB 2026) ===
     gemini_api_key = fields.Char(
         string='API Key (Gemini)',
         help='Ingrese su API Key de Google AI (Gemini)'
     )
     
     gemini_model = fields.Selection([
-        ('gemini-1.5-pro', 'Gemini 1.5 Pro'),
-        ('gemini-1.5-flash', 'Gemini 1.5 Flash'),
-        ('gemini-2.0-flash', 'Gemini 2.0 Flash'),
-    ], string='Modelo Gemini', default='gemini-1.5-pro')
+        ('gemini-3-pro-preview', 'Gemini 3 Pro (Más inteligente)'),
+        ('gemini-3-flash', 'Gemini 3 Flash (Rápido)'),
+        ('gemini-2.5-flash', 'Gemini 2.5 Flash (Estable)'),
+    ], string='Modelo Gemini', default='gemini-3-pro-preview')
     
     gemini_status = fields.Selection([
         ('not_configured', 'No Configurado'),
@@ -67,17 +89,17 @@ class BuildingAIConfigWizard(models.TransientModel):
         compute='_compute_gemini_status'
     )
 
-    # === CAMPOS DE OPENAI ===
+    # === CAMPOS DE OPENAI (FEB 2026) ===
     openai_api_key = fields.Char(
         string='API Key (OpenAI)',
         help='Ingrese su API Key de OpenAI'
     )
     
     openai_model = fields.Selection([
-        ('gpt-4o', 'GPT-4o'),
-        ('gpt-4o-mini', 'GPT-4o Mini'),
-        ('gpt-4.1-mini', 'GPT-4.1 Mini'),
-    ], string='Modelo OpenAI', default='gpt-4o')
+        ('gpt-5.2', 'GPT-5.2 (Flagship)'),
+        ('gpt-5.2-pro', 'GPT-5.2 Pro (Razonamiento extendido)'),
+        ('gpt-5.2-chat-latest', 'GPT-5.2 Instant (Rápido)'),
+    ], string='Modelo OpenAI', default='gpt-5.2')
     
     openai_status = fields.Selection([
         ('not_configured', 'No Configurado'),
@@ -149,6 +171,61 @@ class BuildingAIConfigWizard(models.TransientModel):
         
         return ConfigModel.search(domain, limit=1)
 
+    @api.depends('company_id', 'work_id', 'use_work_override')
+    def _compute_claude_status(self):
+        """Obtiene el estado de configuración de Claude."""
+        for wizard in self:
+            config = self._get_existing_config(wizard, 'claude')
+            if config:
+                wizard.claude_status = 'configured'
+                wizard.claude_last4 = config.api_key_last4 or '****'
+            else:
+                wizard.claude_status = 'not_configured'
+                wizard.claude_last4 = ''
+
+    def action_test_claude_connection(self):
+        """Prueba la conexión con la API de Claude."""
+        self.ensure_one()
+        
+        api_key = self.claude_api_key
+        if not api_key:
+            config = self._get_existing_config(self, 'claude')
+            if config:
+                api_key = config.get_decrypted_api_key()
+        
+        if not api_key:
+            raise UserError(_('No hay API Key de Claude configurada.'))
+        
+        url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        }
+        
+        model = self.claude_model or 'claude-sonnet-4-6'
+        payload = {
+            "model": model,
+            "max_tokens": 10,
+            "messages": [{"role": "user", "content": "Hello"}]
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=CONNECTION_TIMEOUT)
+            
+            if response.status_code == 200:
+                return self._notify_success('Claude', model)
+            elif response.status_code == 401:
+                return self._notify_error('Claude', 'API Key inválida')
+            else:
+                 return self._notify_error('Claude', f'Error {response.status_code}')
+                 
+        except requests.exceptions.Timeout:
+            return self._notify_error('Claude', 'Timeout de conexión')
+        except requests.exceptions.RequestException as e:
+            _logger.error('Error de conexión Claude: %s', str(e))
+            return self._notify_error('Claude', 'Error de conexión')
+
     # === ACCIONES DE PRUEBA DE CONEXIÓN ===
     def action_test_gemini_connection(self):
         """
@@ -167,7 +244,7 @@ class BuildingAIConfigWizard(models.TransientModel):
             raise UserError(_('No hay API Key de Gemini configurada.'))
         
         # Probar conexión
-        model = self.gemini_model or 'gemini-1.5-pro'
+        model = self.gemini_model or 'gemini-3-pro-preview'
         url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent'
         
         headers = {'Content-Type': 'application/json'}
@@ -241,7 +318,7 @@ class BuildingAIConfigWizard(models.TransientModel):
         except requests.exceptions.RequestException as e:
             _logger.error('Error de conexión OpenAI: %s', str(e))
             return self._notify_error('OpenAI', 'Error de conexión')
-
+    
     def _notify_success(self, provider, model):
         """Muestra notificación de éxito."""
         return {
@@ -271,7 +348,7 @@ class BuildingAIConfigWizard(models.TransientModel):
     # === ACCIÓN DE GUARDAR ===
     def action_save(self):
         """
-        Guarda la configuración de ambos proveedores.
+        Guarda la configuración de los proveedores.
         Cifra las API Keys antes de guardarlas.
         """
         self.ensure_one()
@@ -292,6 +369,15 @@ class BuildingAIConfigWizard(models.TransientModel):
         
         # Determinar scope
         work_id = self.work_id.id if self.use_work_override and self.work_id else False
+
+        # Guardar Claude
+        if self.claude_api_key:
+             self._save_provider_config(
+                provider='claude',
+                api_key=self.claude_api_key,
+                model_name=self.claude_model,
+                work_id=work_id
+            )
         
         # Guardar Gemini si hay API Key
         if self.gemini_api_key:

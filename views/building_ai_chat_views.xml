@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- View: Form Chat -->
+    <record id="building_ai_chat_view_form" model="ir.ui.view">
+        <field name="name">building.ai.chat.form</field>
+        <field name="model">building.ai.chat</field>
+        <field name="arch" type="xml">
+            <form string="Asistente IA - Generador de Presupuestos">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="active,generated"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <!-- AREA DE MENSAJES -->
+                    <!-- Usamos un container con estilo para simular chat window -->
+                    <div style="max-height: 500px; overflow-y: auto; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                        <field name="message_ids" mode="list" readonly="1">
+                            <list no_open="1" create="0" delete="0" edit="0" decoration-info="role == 'user'" decoration-success="role == 'assistant'">
+                                <field name="create_date" string="Hora"/>
+                                <field name="role" string="Quién" widget="badge" decoration-info="role == 'user'" decoration-success="role == 'assistant'"/>
+                                <field name="content" string="Mensaje"/>
+                            </list>
+                        </field>
+                    </div>
+
+                    <!-- INPUT AREA -->
+                    <group invisible="state != 'active'">
+                        <field name="user_input" widget="text" placeholder="Describe tu proyecto aquí (ej: Casa en León, 200m2, 3 recámaras, acabados medios)..." nolabel="1" style="min-height: 80px;"/>
+                    </group>
+                    <div class="text-end" invisible="state != 'active'">
+                        <button name="action_send_message" type="object" string="Enviar Mensaje" class="btn-primary" icon="fa-paper-plane"/>
+                    </div>
+
+                    <!-- SUCCESS AERA -->
+                    <div invisible="state != 'generated'" class="text-center p-3 mb-3 bg-success-light border border-success rounded" role="status" style="margin-top: 20px; color: #155724;">
+                        <h4 class="mb-2">
+                            <i class="fa fa-hard-hat fa-lg me-2"/>
+✅ Obra Generada Exitosamente</h4>
+                        <p>La IA ha creado la estructura de tu proyecto.</p>
+                        <hr/>
+                        <button name="action_view_generated_work" type="object" string="Ver Obra Generada" class="btn-success" icon="fa-building"/>
+                    </div>
+
+                    <notebook>
+                        <page string="Debug JSON" groups="base.group_no_one">
+                            <field name="generated_json"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- View: List Chat -->
+    <record id="building_ai_chat_view_list" model="ir.ui.view">
+        <field name="name">building.ai.chat.list</field>
+        <field name="model">building.ai.chat</field>
+        <field name="arch" type="xml">
+            <list string="Chats IA">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="state" widget="badge" decoration-info="state == 'active'" decoration-success="state == 'generated'" decoration-muted="state == 'cancelled'"/>
+                <field name="work_id"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_building_ai_chat" model="ir.actions.act_window">
+        <field name="name">Asistente IA</field>
+        <field name="res_model">building.ai.chat</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Inicia una nueva conversación con la IA
+            </p>
+            <p>
+                Genera presupuestos completos chateando con Claude, OpenAI o Gemini.
+            </p>
+        </field>
+    </record>
+</odoo>

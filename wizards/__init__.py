@@ -7,3 +7,4 @@ from . import building_chapter_loader_wizard
 from . import consolidate_budget_wizard
 from . import cfdi_load_wizard
 from . import allocate_bill_wizard
+from . import building_parametric_report_wizard

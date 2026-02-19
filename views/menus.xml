@@ -19,6 +19,9 @@
 
 
 
+    <!-- Submenú: Asistente IA (Chat) -->
+    <menuitem id="building_menu_ai_chat" name="Asistente IA" parent="building_menu_root" action="action_building_ai_chat" sequence="40"/>
+
     <!-- Submenú: Configuración (Contenedor) -->
     <menuitem id="building_menu_config" name="Configuración" parent="building_menu_root" sequence="100"/>
 
