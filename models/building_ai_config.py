@@ -37,6 +37,7 @@ class BuildingAIConfig(models.Model):
     provider = fields.Selection([
         ('gemini', 'Gemini (Google)'),
         ('openai', 'ChatGPT (OpenAI)'),
+        ('claude', 'Claude (Anthropic)'),
     ], string='Proveedor', required=True)
     
     model_name = fields.Char(
@@ -108,33 +109,27 @@ class BuildingAIConfig(models.Model):
     @api.model
     def get_config_for_work(self, work_id, provider):
         """
-        Obtiene la configuración de IA para una obra específica.
+        Obtiene la configuración de IA para una obra específica o compañía.
         Primero busca config específica de obra, luego de compañía.
-        
-        Args:
-            work_id: ID de la obra
-            provider: 'gemini' o 'openai'
-            
-        Returns:
-            building.ai.config record o False
         """
-        work = self.env['building.work'].browse(work_id)
-        if not work.exists():
-            return False
+        company_id = self.env.company.id
         
-        # Buscar config específica de obra
+        if work_id:
+            work = self.env['building.work'].browse(work_id)
+            if work.exists():
+                company_id = work.company_id.id
+                # 1. Buscar config específica de obra
+                config = self.search([
+                    ('work_id', '=', work_id),
+                    ('provider', '=', provider),
+                    ('active', '=', True),
+                ], limit=1)
+                if config:
+                    return config
+        
+        # 2. Buscar config de compañía (sin obra específica)
         config = self.search([
-            ('work_id', '=', work_id),
-            ('provider', '=', provider),
-            ('active', '=', True),
-        ], limit=1)
-        
-        if config:
-            return config
-        
-        # Buscar config de compañía (sin obra específica)
-        config = self.search([
-            ('company_id', '=', work.company_id.id),
+            ('company_id', '=', company_id),
             ('work_id', '=', False),
             ('provider', '=', provider),
             ('active', '=', True),

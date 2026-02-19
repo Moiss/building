@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- VISTA FORM REDISEÑADA ESTILO CHATGPT/GEMINI -->
+    <record id="building_ai_chat_view_form" model="ir.ui.view">
+        <field name="name">building.ai.chat.view.form</field>
+        <field name="model">building.ai.chat</field>
+        <field name="priority">1</field>
+        <field name="arch" type="xml">
+            <form string="Asistente IA" class="o_building_ai_chat_form" create="0">
+                <header>
+                    <button name="action_create_work" string="Crear Obra" type="object" class="btn-primary" invisible="state != 'ready'" icon="fa-check-circle"/>
+                    <button name="action_view_generated_work" string="Ver Obra Generada" type="object" class="btn-success" invisible="not has_generated_work" icon="fa-external-link"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,ready,created"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Título del Chat..."/>
+                        </h1>
+                    </div>
+
+                    <div class="o_building_chat_ui_wrapper" style="display: flex; flex-direction: column; height: 65vh; border: 1px solid #dee2e6; border-radius: 12px; background: #f8f9fa; margin-top: 20px;">
+
+                        <!-- PROBLEMA 3 FIX: Área de Mensajes — kanban con no_open para evitar ventana técnica -->
+                        <div class="o_building_chat_messages_area" style="flex: 1; overflow-y: auto; padding: 20px;">
+                            <field name="chat_history_ids" mode="kanban" nolabel="1" options="{'no_open': True}">
+                                <kanban create="0" delete="0" edit="0">
+                                    <field name="role"/>
+                                    <field name="content"/>
+                                    <templates>
+                                        <t t-name="card">
+                                            <div t-attf-class="d-flex mb-3 #{record.role.raw_value == 'user' ? 'flex-row-reverse' : 'flex-row'}">
+                                                <!-- Icono/Avatar -->
+                                                <div t-attf-class="rounded-circle d-flex align-items-center justify-content-center #{record.role.raw_value == 'user' ? 'bg-primary text-white ms-2' : 'bg-warning text-dark me-2'}" style="width: 36px; height: 36px; min-width: 36px; flex-shrink: 0;">
+                                                    <i t-attf-class="fa #{record.role.raw_value == 'user' ? 'fa-user' : 'fa-magic'}" t-att-title="record.role.value"/>
+                                                </div>
+                                                <!-- Burbuja de Mensaje -->
+                                                <div t-attf-class="p-3 shadow-sm #{record.role.raw_value == 'user' ? 'bg-primary text-white' : 'bg-white text-dark'}" style="border-radius: 18px; max-width: 80%; line-height: 1.5; font-size: 15px; white-space: pre-wrap; word-break: break-word; border: #{record.role.raw_value == 'user' ? 'none' : '1px solid #e0e0e0'};">
+                                                    <field name="content"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                            </field>
+                        </div>
+
+                        <!-- Footer con Input Area -->
+                        <div class="o_building_chat_footer p-3 bg-white border-top" style="border-radius: 0 0 12px 12px;">
+
+                            <!-- PROBLEMA 2 FIX: Widget many2many_binary nativo — abre explorador de archivos del SO -->
+                            <div class="mb-2">
+                                <field name="user_attachment_ids" widget="many2many_binary" string="📎 Adjuntar planos o archivos" nolabel="1" options="{'no_create': True}"/>
+                            </div>
+
+                            <div class="d-flex align-items-end gap-2">
+                                <div class="flex-grow-1">
+                                    <field name="user_input" widget="text" placeholder="Escribe tu mensaje aquí... (la IA te hará preguntas antes de generar)" nolabel="1" class="form-control border-0 bg-light shadow-none" style="min-height: 44px; padding: 10px 15px; border-radius: 22px; width: 100%; resize: none; overflow: hidden;"/>
+                                </div>
+
+                                <!-- PROBLEMA 4 FIX: Botón Enviar con feedback visual de carga -->
+                                <button name="action_send_message" type="object" string="Enviar" icon="fa-paper-plane" class="btn btn-primary rounded-pill px-4 py-2" title="Enviar mensaje" data-loading-text="⚙️ Generando..." style="height: 44px; display: flex; align-items: center; border-radius: 22px !important;" onclick="
+                                          var btn = this;
+                                          btn.disabled = true;
+                                          btn.querySelector('span')
+                                            ? btn.querySelector('span').innerText = '⚙️ Generando...'
+                                            : btn.innerText = '⚙️ Generando...';
+                                          var existing = document.getElementById('ai-build-toast');
+                                          if (!existing) {
+                                            var toast = document.createElement('div');
+                                            toast.id = 'ai-build-toast';
+                                            toast.style = 'position:fixed;bottom:80px;right:20px;background:#6366f1;color:white;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease';
+                                            toast.innerHTML = '🏗️ La IA está construyendo el presupuesto...';
+                                            document.body.appendChild(toast);
+                                          }
+                                        "/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos ocultos necesarios -->
+                    <group invisible="1">
+                        <field name="has_generated_work"/>
+                        <field name="generated_work_id"/>
+                        <field name="user_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- VISTA LIST (Mantener para historial) -->
+    <record id="building_ai_chat_view_tree" model="ir.ui.view">
+        <field name="name">building.ai.chat.view.list</field>
+        <field name="model">building.ai.chat</field>
+        <field name="arch" type="xml">
+            <list string="Historial de Asistente IA">
+                <field name="name"/>
+                <field name="create_date" string="Fecha"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'ready'" decoration-success="state == 'created'"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ACCION Y MENUS -->
+    <record id="action_building_ai_chat" model="ir.actions.act_window">
+        <field name="name">Asistente IA</field>
+        <field name="res_model">building.ai.chat</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Empieza una conversación con la IA!
+            </p>
+            <p>
+                Puedes pedirle que genere presupuestos, resuma obras o analice costos.
+            </p>
+        </field>
+    </record>
+
+</odoo>

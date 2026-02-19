@@ -52,10 +52,12 @@ class BuildingAIConfigWizard(models.TransientModel):
     )
 
     claude_model = fields.Selection([
-        ('claude-3-opus-20240229', 'Claude 3 Opus'),
-        ('claude-3-sonnet-20240229', 'Claude 3 Sonnet'),
-        ('claude-3-haiku-20240307', 'Claude 3 Haiku'),
-    ], string='Modelo Claude', default='claude-3-sonnet-20240229')
+        ('claude-opus-4-6', 'Claude Opus 4.6 (Más inteligente)'),
+        ('claude-opus-4-5-20251101', 'Claude Opus 4.5'),
+        ('claude-sonnet-4-6', 'Claude Sonnet 4.6 (Recomendado)'),
+        ('claude-sonnet-4-5-20250929', 'Claude Sonnet 4.5'),
+        ('claude-haiku-4-5-20251001', 'Claude Haiku 4.5 (Rápido)'),
+    ], string='Modelo Claude', default='claude-sonnet-4-6')
 
     claude_status = fields.Selection([
         ('not_configured', 'No Configurado'),
@@ -74,10 +76,12 @@ class BuildingAIConfigWizard(models.TransientModel):
     )
     
     gemini_model = fields.Selection([
-        ('gemini-1.5-pro', 'Gemini 1.5 Pro'),
-        ('gemini-1.5-flash', 'Gemini 1.5 Flash'),
-        ('gemini-2.0-flash', 'Gemini 2.0 Flash'),
-    ], string='Modelo Gemini', default='gemini-1.5-pro')
+        ('gemini-3-pro-preview', 'Gemini 3 Pro (Más inteligente)'),
+        ('gemini-3-flash-preview', 'Gemini 3 Flash (Recomendado)'),
+        ('gemini-2.5-pro', 'Gemini 2.5 Pro'),
+        ('gemini-2.5-flash', 'Gemini 2.5 Flash'),
+        ('gemini-2.5-flash-lite', 'Gemini 2.5 Flash Lite (Económico)'),
+    ], string='Modelo Gemini', default='gemini-3-flash-preview')
     
     gemini_status = fields.Selection([
         ('not_configured', 'No Configurado'),
@@ -96,10 +100,11 @@ class BuildingAIConfigWizard(models.TransientModel):
     )
     
     openai_model = fields.Selection([
-        ('gpt-4o', 'GPT-4o'),
-        ('gpt-4o-mini', 'GPT-4o Mini'),
-        ('gpt-4.1-mini', 'GPT-4.1 Mini'),
-    ], string='Modelo OpenAI', default='gpt-4o')
+        ('gpt-5.2', 'GPT-5.2 Thinking (Más inteligente)'),
+        ('gpt-5.2-pro', 'GPT-5.2 Pro'),
+        ('gpt-5.2-chat-latest', 'GPT-5.2 Instant (Rápido)'),
+        ('gpt-5-mini', 'GPT-5 Mini (Económico)'),
+    ], string='Modelo OpenAI', default='gpt-5.2-chat-latest')
     
     openai_status = fields.Selection([
         ('not_configured', 'No Configurado'),
@@ -278,10 +283,11 @@ class BuildingAIConfigWizard(models.TransientModel):
                 return self._notify_error('Gemini', f'Error {response.status_code}')
                 
         except requests.exceptions.Timeout:
-            return self._notify_error('Gemini', 'Timeout de conexión')
+            _logger.error('Gemini Connection Timeout')
+            return self._notify_error('Gemini', 'Timeout de conexión (Google API no responde)')
         except requests.exceptions.RequestException as e:
             _logger.error('Error de conexión Gemini: %s', str(e))
-            return self._notify_error('Gemini', 'Error de conexión')
+            return self._notify_error('Gemini', 'Error de conexión (Verifique internet o firewall)')
 
     def action_test_openai_connection(self):
         """

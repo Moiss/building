@@ -687,8 +687,23 @@ class BuildingWork(models.Model):
             'target': 'new',
             'context': {
                 'default_work_id': self.id,
-                'default_company_id': self.company_id.id,
             },
+        }
+
+    def action_open_ai_chat(self):
+        """Abre el chat IA conversacional para generar presupuestos."""
+        self.ensure_one()
+        # Create a new chat session for the current user and work
+        chat = self.env['building.ai.chat'].create({
+            'user_id': self.env.user.id,
+            # We don't link directly to work here yet, but context might be useful
+        })
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.ai.chat',
+            'res_id': chat.id,
+            'view_mode': 'form',
+            'target': 'current',
         }
     def action_set_planning(self):
         """

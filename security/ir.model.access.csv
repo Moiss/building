@@ -75,3 +75,13 @@ access_allocate_bill_wizard_line_director,building.allocate.bill.wizard.line.dir
 access_cfdi_load_wizard_accounting,building.cfdi.load.wizard.accounting,model_building_cfdi_load_wizard,building_dashboard.group_building_accounting,1,1,1,1
 access_cfdi_load_wizard_admin,building.cfdi.load.wizard.admin,model_building_cfdi_load_wizard,building_dashboard.group_building_admin,1,1,1,1
 access_cfdi_load_wizard_director,building.cfdi.load.wizard.director,model_building_cfdi_load_wizard,building_dashboard.group_building_director,1,1,1,1
+access_building_ai_chat_user,building.ai.chat.user,model_building_ai_chat,building_dashboard.group_building_accounting,1,1,1,0
+access_building_ai_chat_admin,building.ai.chat.admin,model_building_ai_chat,building_dashboard.group_building_admin,1,1,1,1
+access_building_ai_chat_director,building.ai.chat.director,model_building_ai_chat,building_dashboard.group_building_director,1,1,1,1
+access_building_ai_chat_message_user,building.ai.chat.message.user,model_building_ai_chat_message,building_dashboard.group_building_accounting,1,1,1,0
+access_building_ai_chat_message_admin,building.ai.chat.message.admin,model_building_ai_chat_message,building_dashboard.group_building_admin,1,1,1,1
+access_building_ai_chat_message_director,building.ai.chat.message.director,model_building_ai_chat_message,building_dashboard.group_building_director,1,1,1,1
+access_building_ai_service_user,building.ai.service.user,model_building_ai_service,building_dashboard.group_building_accounting,1,1,1,0
+access_building_ai_service_admin,building.ai.service.admin,model_building_ai_service,building_dashboard.group_building_admin,1,1,1,1
+access_building_ai_service_director,building.ai.service.director,model_building_ai_service,building_dashboard.group_building_director,1,1,1,1
+

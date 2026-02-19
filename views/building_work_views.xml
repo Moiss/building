@@ -32,9 +32,7 @@
                         <button name="action_request_purchase" type="object" class="oe_stat_button" icon="fa-shopping-cart">
                             <span class="o_stat_text">Solicitar Compra</span>
                         </button>
-                        <button name="action_open_ai_assistant" type="object" class="oe_stat_button" icon="fa-robot" title="Asistente IA — Configuración">
-                            <span class="o_stat_text">Asistente IA</span>
-                        </button>
+
 
                         <button name="%(action_building_real_line)d" type="action" class="oe_stat_button" icon="fa-money" context="{'search_default_work_id': id, 'default_work_id': id}">
                             <div class="o_stat_info">
