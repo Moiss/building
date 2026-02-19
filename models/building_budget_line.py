@@ -64,6 +64,30 @@ class BuildingBudgetLine(models.Model):
         help='Orden de visualización'
     )
 
+    # === CAMPOS DE DIMENSIONES ===
+    quantity = fields.Float(
+        string='Cantidad',
+        default=1.0,
+        help='Cantidad presupuestada'
+    )
+
+    unit_price = fields.Float(
+        string='Precio Unitario',
+        default=0.0,
+        help='Costo por unidad'
+    )
+
+    product_uom_id = fields.Many2one(
+        'uom.uom',
+        string='Unidad de Medida',
+        help='Unidad de medida (m2, ml, pza, etc.)'
+    )
+
+    @api.onchange('quantity', 'unit_price')
+    def _onchange_price_qty(self):
+        if self.quantity and self.unit_price:
+            self.amount = self.quantity * self.unit_price
+
     # === CAMPOS MONETARIOS ===
     amount = fields.Float(
         string='Importe',

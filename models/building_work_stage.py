@@ -23,6 +23,16 @@ class BuildingWorkStage(models.Model):
         required=True,
         help='Nombre de la etapa o frente de trabajo'
     )
+
+    description = fields.Text(
+        string='Descripción',
+        help='Descripción detallada de los trabajos en esta etapa'
+    )
+
+    percent_weight = fields.Float(
+        string='Peso (%)',
+        help='Peso ponderado de la etapa en la obra (suma debe ser 100%)'
+    )
     
     work_id = fields.Many2one(
         'building.work',

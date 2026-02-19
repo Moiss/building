@@ -8,6 +8,7 @@ from . import building_work
 from . import building_work_stage
 from . import building_work_alert
 from . import building_ai_config
+from . import building_ai_chat
 from . import progress_engine
 from . import encryption_service
 from . import res_config_settings

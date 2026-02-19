@@ -29,6 +29,27 @@
 
                     <notebook>
                         <!-- ============================================= -->
+                        <!-- TAB: Claude (Anthropic)                       -->
+                        <!-- ============================================= -->
+                        <page string="Claude (Anthropic)" name="claude">
+                            <group>
+                                <group>
+                                    <field name="claude_status" widget="badge" decoration-success="claude_status == 'configured'" decoration-muted="claude_status == 'not_configured'"/>
+                                    <field name="claude_last4" string="Últimos 4 dígitos" invisible="claude_status != 'configured'"/>
+                                </group>
+                            </group>
+                            <group string="Configuración" invisible="not can_edit">
+                                <group>
+                                    <field name="claude_api_key" password="True" placeholder="sk-ant-..." help="Ingrese su API Key de Anthropic"/>
+                                    <field name="claude_model"/>
+                                </group>
+                            </group>
+                            <div class="oe_button_box mt-3">
+                                <button name="action_test_claude_connection" type="object" string="Probar Conexión" class="btn-secondary" icon="fa-plug"/>
+                            </div>
+                        </page>
+
+                        <!-- ============================================= -->
                         <!-- TAB: Gemini                                   -->
                         <!-- ============================================= -->
                         <page string="Gemini (Google)" name="gemini">
