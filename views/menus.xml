@@ -6,7 +6,7 @@
 
     <!-- Menú Raíz - Con action para que sea visible como app -->
     <!-- Menú Raíz - Con action para que sea visible como app -->
-    <menuitem id="building_menu_root" name="Control de Obras" action="building_budget_action" web_icon="building_dashboard,static/description/icon.png" sequence="50"/>
+    <menuitem id="building_menu_root" name="Control de Obras" action="building_work_action" web_icon="building_dashboard,static/description/icon.png" sequence="50"/>
 
     <!-- Submenú: Obras (acceso directo adicional) -->
     <menuitem id="building_menu_works" name="Obras" parent="building_menu_root" action="building_work_action" sequence="10"/>
