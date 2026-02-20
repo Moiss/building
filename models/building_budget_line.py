@@ -295,7 +295,7 @@ class BuildingBudgetLine(models.Model):
         thresh_warn = float(ICP.get_param('building.budget_real_threshold_warning', 90.0))
         thresh_crit = float(ICP.get_param('building.budget_real_threshold_critical', 100.0))
 
-        for line in self:
+        for line in self.exists():
             # 1. Calcular Real (Delegar a lógica simple o motor si fuera complejo)
             # Como tenemos real_line_ids, podemos sumar directo si "internal".
             # Pero para consistencia con filtros de 'work.real_source', usamos el engine si es posible,
@@ -316,7 +316,7 @@ class BuildingBudgetLine(models.Model):
             
             # Simplificación Fase 3.3.2: Usamos sum(amount) de real_line_ids presentes.
             # El Financial Engine debe encargarse de popular/leer real_line_ids correctamente.
-            real = sum(line.real_line_ids.mapped('amount'))
+            real = sum(line.real_line_ids.exists().mapped('amount'))
 
             line.real_total = real
             line.variance_amount = line.amount - real
@@ -344,7 +344,7 @@ class BuildingBudgetLine(models.Model):
     @api.depends('budget_id.duration_months')
     def _compute_period_to_default(self):
         """Establece el período final por defecto igual a la duración del presupuesto."""
-        for line in self:
+        for line in self.exists():
             if line.budget_id and line.budget_id.duration_months:
                 line.period_to = line.budget_id.duration_months
             else:
@@ -353,8 +353,8 @@ class BuildingBudgetLine(models.Model):
     @api.depends('period_value_ids', 'period_value_ids.amount', 'amount', 'advance')
     def _compute_distribution(self):
         """Calcula totales de distribución y detecta advertencias."""
-        for line in self:
-            line.total_distributed = sum(line.period_value_ids.mapped('amount'))
+        for line in self.exists():
+            line.total_distributed = sum(line.period_value_ids.exists().mapped('amount'))
             line.amount_undistributed = line.amount - line.total_distributed
             
             # La diferencia debe considerar el anticipo (se resta del importe total)
@@ -365,7 +365,7 @@ class BuildingBudgetLine(models.Model):
     @api.depends('has_warning', 'difference')
     def _compute_warning_message(self):
         """Genera mensaje de advertencia (campo no almacenado)."""
-        for line in self:
+        for line in self.exists():
             if line.has_warning:
                 line.warning_message = _('⚠ Diferencia: %.2f') % line.difference
             else:
@@ -374,7 +374,7 @@ class BuildingBudgetLine(models.Model):
     @api.depends('code', 'name', 'chapter_id.code')
     def _compute_display_name(self):
         """Genera nombre para mostrar."""
-        for line in self:
+        for line in self.exists():
             if line.chapter_id:
                 line.display_name = f"{line.chapter_id.code}.{line.code} {line.name}"
             else:
@@ -450,6 +450,11 @@ class BuildingBudgetLine(models.Model):
         
         También fuerza recálculo de KPIs en building.work.
         """
+        # Evitar MissingError en borrado en cascada
+        self = self.exists()
+        if not self:
+            return True
+            
         works = self.mapped('work_id')
         
         for line in self:
@@ -477,12 +482,16 @@ class BuildingBudgetLine(models.Model):
         
         # Forzar recálculo después de eliminar
         for work in works:
-            if work:
-                work._compute_budget_kpis()
-                work._compute_amount_available()
-                work._compute_financial_progress()
-                # ENGINE: Recalcular pesos
-                self.env['building.progress.engine'].recompute_hierarchy(work.id)
+            if work.exists():
+                try:
+                    work._compute_budget_kpis()
+                    work._compute_amount_available()
+                    work._compute_financial_progress()
+                    # ENGINE: Recalcular pesos
+                    self.env['building.progress.engine'].recompute_hierarchy(work.id)
+                except Exception:
+                    # Ignorar errores de cache o registros eliminados cuando se borra la obra completa en cascada
+                    pass
         
         return result
 

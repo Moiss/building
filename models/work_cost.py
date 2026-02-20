@@ -196,7 +196,12 @@ class BuildingWorkCost(models.Model):
         return res
 
     def unlink(self):
+        # Evitar MissingError en borrado en cascada
+        self = self.exists()
+        if not self:
+            return True
+            
         works = self.mapped('work_id')
         res = super().unlink()
-        works._recompute_cost_totals()
+        works.exists()._recompute_cost_totals()
         return res

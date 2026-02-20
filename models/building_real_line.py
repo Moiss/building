@@ -189,12 +189,17 @@ class BuildingRealLine(models.Model):
         return result
 
     def unlink(self):
+        # Evitar MissingError en borrado en cascada
+        self = self.exists()
+        if not self:
+            return True
+            
         for line in self:
             if line.is_migrated:
                 raise UserError(_('No se puede eliminar un gasto ya migrado a contabilidad.'))
         works = self.mapped('work_id')
         result = super().unlink()
         # Regenerar alertas tras eliminar gasto
-        for work in works:
+        for work in works.exists():
             self.env['building.alert.engine'].rebuild_alerts(work.id)
         return result

@@ -75,13 +75,13 @@ class BuildingBudgetPeriodValue(models.Model):
     @api.depends('period_number')
     def _compute_period_name(self):
         """Genera nombre del periodo: M1, M2, M3..."""
-        for record in self:
+        for record in self.exists():
             record.period_name = f"M{record.period_number}" if record.period_number else ""
 
     # === DISPLAY NAME ===
     def _compute_display_name(self):
         """Genera nombre para mostrar."""
-        for record in self:
+        for record in self.exists():
             record.display_name = f"{record.line_id.name} - {record.period_name}"
 
     # === ACCIONES ===
@@ -131,10 +131,15 @@ class BuildingBudgetPeriodValue(models.Model):
 
     def unlink(self):
         """Override unlink para forzar recálculo de KPIs en building.work."""
+        # Evitar MissingError en borrado en cascada
+        self = self.exists()
+        if not self:
+            return True
+            
         works = self.mapped('line_id.work_id')
         result = super().unlink()
         # Forzar recálculo después de eliminar
-        for work in works:
+        for work in works.exists():
             if work:
                 work._compute_budget_kpis()
                 work._compute_amount_available()

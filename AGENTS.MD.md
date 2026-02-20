@@ -252,14 +252,25 @@ building_dashboard/
 
 ### 🚧 RELEASE V1.1 — Control Operativo
 
-| Etapa | Nombre                                | Estado       |
-| ----- | ------------------------------------- | ------------ |
-| 4.1   | Gastos Adicionales (indirectos)       | ✅ TERMINADA |
-| 4.2   | Evidencias (preparado para Flutter)   | 🆕 SIGUIENTE |
-| 4.6   | Identificador obra pública (contrato) | Pendiente    |
-| 4.5   | Jornales (días de trabajo)            | Pendiente    |
-| 4.3   | N Presupuestos + Consolidación        | Pendiente    |
-| 4.4   | Factura proveedor 1→N obras + 1 CxP   | Pendiente    |
+| Etapa | Nombre                                 | Estado       |
+| ----- | -------------------------------------- | ------------ |
+| 4.1   | Gastos Adicionales (indirectos)        | ✅ TERMINADA |
+| 4.2   | Evidencias (preparado para Flutter)    | ✅ TERMINADA |
+| 4.3   | Presupuestos Múltiples + Consolidación | ✅ TERMINADA |
+| 4.4   | Facturas → Obras, Analíticas, CFDI XML | ✅ TERMINADA |
+| 4.6   | Identificador Obra Pública             | ✅ TERMINADA |
+| 4.7   | Reporte Paramétrico                    | ✅ TERMINADA |
+
+### 🚀 RELEASE V1.2 — IA y Flujos Operativos
+
+| Etapa | Nombre                         | Estado       |
+| ----- | ------------------------------ | ------------ |
+| 5.1   | Chat IA Conversacional + fixes | ✅ TERMINADA |
+| 4.5   | Jornales                       | ⏳ Pendiente |
+| 5.2   | Flujo aprobación de gastos     | ⏳ Pendiente |
+| 5.3   | Fechas y alertas por etapa     | ⏳ Pendiente |
+| 5.4   | Resumen granular por fase      | ⏳ Pendiente |
+| 5.5   | Perfiles y permisos            | ⏳ Pendiente |
 
 ### 🔮 RELEASE V2 — Contabilidad (track separado)
 

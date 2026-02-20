@@ -219,6 +219,11 @@ class BuildingStageProgress(models.Model):
 
     def unlink(self):
         """Bloquea eliminación de registros confirmados."""
+        # Evitar MissingError en borrado en cascada
+        self = self.exists()
+        if not self:
+            return True
+            
         for record in self:
             if record.state == 'confirmed':
                 raise UserError(_(

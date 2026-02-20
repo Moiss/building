@@ -21,23 +21,47 @@
 
                     <div class="o_building_chat_ui_wrapper" style="display: flex; flex-direction: column; height: 65vh; border: 1px solid #dee2e6; border-radius: 12px; background: #f8f9fa; margin-top: 20px;">
 
-                        <!-- PROBLEMA 3 FIX: Área de Mensajes — kanban con no_open para evitar ventana técnica -->
-                        <div class="o_building_chat_messages_area" style="flex: 1; overflow-y: auto; padding: 20px;">
-                            <field name="chat_history_ids" mode="kanban" nolabel="1" options="{'no_open': True}">
-                                <kanban create="0" delete="0" edit="0">
+                        <!-- FIX: Área de Mensajes — kanban forzado a vertical via CSS -->
+                        <div class="o_building_chat_messages_area" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column-reverse;">
+                            <field name="chat_history_ids" nolabel="1" options="{'no_open': True}">
+                                <form string="Detalle de Mensaje" create="0" edit="0">
+                                    <sheet>
+                                        <group>
+                                            <field name="role" readonly="1"/>
+                                            <field name="content" readonly="1" widget="html"/>
+                                        </group>
+                                    </sheet>
+                                </form>
+                                <kanban create="0" delete="0" edit="0" class="o_building_ai_vertical_kanban">
                                     <field name="role"/>
                                     <field name="content"/>
                                     <templates>
                                         <t t-name="card">
-                                            <div t-attf-class="d-flex mb-3 #{record.role.raw_value == 'user' ? 'flex-row-reverse' : 'flex-row'}">
-                                                <!-- Icono/Avatar -->
-                                                <div t-attf-class="rounded-circle d-flex align-items-center justify-content-center #{record.role.raw_value == 'user' ? 'bg-primary text-white ms-2' : 'bg-warning text-dark me-2'}" style="width: 36px; height: 36px; min-width: 36px; flex-shrink: 0;">
-                                                    <i t-attf-class="fa #{record.role.raw_value == 'user' ? 'fa-user' : 'fa-magic'}" t-att-title="record.role.value"/>
+                                            <!-- Burbuja Completa -->
+                                            <div t-attf-class="d-flex w-100 mb-3 #{record.role.raw_value == 'user' ? 'justify-content-end' : 'justify-content-start'}">
+
+                                                <!-- Avatar IA -->
+                                                <t t-if="record.role.raw_value != 'user'">
+                                                    <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center me-2 flex-shrink-0" style="width:36px;height:36px;font-size:14px;">
+                                                        <i class="fa fa-magic" title="IA" aria-label="IA"/>
+                                                    </div>
+                                                </t>
+
+                                                <!-- Burbuja mensaje -->
+                                                <div t-attf-class="px-3 py-2 rounded-3 shadow-sm" style="max-width:75%;word-break:break-word;" t-attf-style="
+                                                         background:#{record.role.raw_value == 'user' ? '#6366f1' : '#f8f9fa'};
+                                                         color:#{record.role.raw_value == 'user' ? 'white' : '#212529'};
+                                                         border:#{record.role.raw_value == 'user' ? 'none' : '1px solid #dee2e6'};
+                                                     ">
+                                                    <t t-esc="record.content.raw_value"/>
                                                 </div>
-                                                <!-- Burbuja de Mensaje -->
-                                                <div t-attf-class="p-3 shadow-sm #{record.role.raw_value == 'user' ? 'bg-primary text-white' : 'bg-white text-dark'}" style="border-radius: 18px; max-width: 80%; line-height: 1.5; font-size: 15px; white-space: pre-wrap; word-break: break-word; border: #{record.role.raw_value == 'user' ? 'none' : '1px solid #e0e0e0'};">
-                                                    <field name="content"/>
-                                                </div>
+
+                                                <!-- Avatar usuario -->
+                                                <t t-if="record.role.raw_value == 'user'">
+                                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0" style="width:36px;height:36px;font-size:14px;">
+                                                        <i class="fa fa-user" title="Usuario" aria-label="Usuario"/>
+                                                    </div>
+                                                </t>
                                             </div>
                                         </t>
                                     </templates>
@@ -48,32 +72,15 @@
                         <!-- Footer con Input Area -->
                         <div class="o_building_chat_footer p-3 bg-white border-top" style="border-radius: 0 0 12px 12px;">
 
-                            <!-- PROBLEMA 2 FIX: Widget many2many_binary nativo — abre explorador de archivos del SO -->
-                            <div class="mb-2">
-                                <field name="user_attachment_ids" widget="many2many_binary" string="📎 Adjuntar planos o archivos" nolabel="1" options="{'no_create': True}"/>
-                            </div>
+
 
                             <div class="d-flex align-items-end gap-2">
                                 <div class="flex-grow-1">
                                     <field name="user_input" widget="text" placeholder="Escribe tu mensaje aquí... (la IA te hará preguntas antes de generar)" nolabel="1" class="form-control border-0 bg-light shadow-none" style="min-height: 44px; padding: 10px 15px; border-radius: 22px; width: 100%; resize: none; overflow: hidden;"/>
                                 </div>
 
-                                <!-- PROBLEMA 4 FIX: Botón Enviar con feedback visual de carga -->
-                                <button name="action_send_message" type="object" string="Enviar" icon="fa-paper-plane" class="btn btn-primary rounded-pill px-4 py-2" title="Enviar mensaje" data-loading-text="⚙️ Generando..." style="height: 44px; display: flex; align-items: center; border-radius: 22px !important;" onclick="
-                                          var btn = this;
-                                          btn.disabled = true;
-                                          btn.querySelector('span')
-                                            ? btn.querySelector('span').innerText = '⚙️ Generando...'
-                                            : btn.innerText = '⚙️ Generando...';
-                                          var existing = document.getElementById('ai-build-toast');
-                                          if (!existing) {
-                                            var toast = document.createElement('div');
-                                            toast.id = 'ai-build-toast';
-                                            toast.style = 'position:fixed;bottom:80px;right:20px;background:#6366f1;color:white;padding:12px 20px;border-radius:8px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:fadeIn 0.3s ease';
-                                            toast.innerHTML = '🏗️ La IA está construyendo el presupuesto...';
-                                            document.body.appendChild(toast);
-                                          }
-                                        "/>
+                                <!-- FIX: Botón Enviar limpiado del JS atascado -->
+                                <button name="action_send_message" type="object" string="Enviar" icon="fa-paper-plane" class="btn btn-primary rounded-pill px-4 py-2" title="Enviar mensaje" style="height: 44px; display: flex; align-items: center; border-radius: 22px !important;"/>
                             </div>
                         </div>
                     </div>
@@ -85,6 +92,43 @@
                         <field name="user_id"/>
                     </group>
                 </sheet>
+
+                <!-- Hack para Odoo: Si un modelo hereda mail.thread y tiene adjuntos, pero no tiene chatter en la vista,
+                     Odoo inyecta automáticamente una tabla cruda de adjuntos al final. 
+                     Agregamos un chatter invisible para suprimir ese comportamiento. -->
+                <div class="oe_chatter" invisible="1">
+                    <field name="message_follower_ids" groups="base.group_user"/>
+                    <field name="message_ids"/>
+                </div>
+
+                <!-- Estilos CSS para ocultar interfaz estándar de lista (headers, bordes) y simular chat -->
+                <style>
+                    /* Ocultar header y columnas nativas de la list */
+                    .o_building_ai_chat_form .o_list_view thead,
+                    .o_building_ai_chat_form .o_list_view .o_list_record_selector,
+                    .o_building_ai_chat_form .o_list_view td.o_list_record_selector {
+                        display: none !important;
+                    }
+
+                    /* Quitar bordes de filas para que parezca chat */
+                    .o_building_ai_chat_form .o_list_view tbody tr {
+                        border: none !important;
+                        background: transparent !important;
+                    }
+
+                    .o_building_ai_chat_form .o_list_view tbody td {
+                        border: none !important;
+                        padding: 0 !important;
+                    }
+
+                    /* Scroll automático al último mensaje */
+                    .o_building_ai_chat_form .o_list_view {
+                        max-height: 500px;
+                        overflow-y: auto;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                </style>
             </form>
         </field>
     </record>

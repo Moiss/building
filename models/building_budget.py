@@ -203,9 +203,10 @@ class BuildingBudget(models.Model):
         Si la diferencia es 0, significa que todo está correctamente distribuido.
         """
         for budget in self:
-            budget.total_amount = sum(budget.chapter_ids.mapped('total_amount'))
-            budget.total_advance = sum(budget.chapter_ids.mapped('total_advance'))
-            budget.total_distributed = sum(budget.chapter_ids.mapped('total_distributed'))
+            valid_chapters = budget.chapter_ids.exists()
+            budget.total_amount = sum(valid_chapters.mapped('total_amount'))
+            budget.total_advance = sum(valid_chapters.mapped('total_advance'))
+            budget.total_distributed = sum(valid_chapters.mapped('total_distributed'))
             # Fórmula corregida: restar anticipos del total antes de comparar con distribuido
             distributable = budget.total_amount - budget.total_advance
             budget.difference = distributable - budget.total_distributed
@@ -215,13 +216,13 @@ class BuildingBudget(models.Model):
     def _compute_chapter_count(self):
         """Cuenta capítulos."""
         for budget in self:
-            budget.chapter_count = len(budget.chapter_ids)
+            budget.chapter_count = len(budget.chapter_ids.exists())
 
     @api.depends('chapter_ids.line_ids')
     def _compute_line_count(self):
         """Cuenta partidas totales."""
         for budget in self:
-            budget.line_count = sum(len(ch.line_ids) for ch in budget.chapter_ids)
+            budget.line_count = sum(len(ch.line_ids.exists()) for ch in budget.chapter_ids.exists())
 
     # === ACCIONES DE ESTADO ===
     def action_validate(self):

@@ -218,15 +218,16 @@ class BuildingBudgetChapter(models.Model):
     def _compute_totals(self):
         """Calcula totales del capítulo."""
         for chapter in self:
-            chapter.total_amount = sum(chapter.line_ids.mapped('amount'))
-            chapter.total_advance = sum(chapter.line_ids.mapped('advance'))
-            chapter.total_distributed = sum(chapter.line_ids.mapped('total_distributed'))
+            valid_lines = chapter.line_ids.exists()
+            chapter.total_amount = sum(valid_lines.mapped('amount'))
+            chapter.total_advance = sum(valid_lines.mapped('advance'))
+            chapter.total_distributed = sum(valid_lines.mapped('total_distributed'))
 
     @api.depends('line_ids')
     def _compute_line_count(self):
         """Cuenta partidas del capítulo."""
         for chapter in self:
-            chapter.line_count = len(chapter.line_ids)
+            chapter.line_count = len(chapter.line_ids.exists())
 
     @api.depends('code', 'name')
     def _compute_display_name(self):
@@ -318,6 +319,11 @@ class BuildingBudgetChapter(models.Model):
         
         También fuerza recálculo de KPIs en building.work.
         """
+        # Evitar MissingError en borrado en cascada
+        self = self.exists()
+        if not self:
+            return True
+            
         works = self.mapped('work_id')
         
         for chapter in self:
@@ -331,10 +337,14 @@ class BuildingBudgetChapter(models.Model):
         
         # Forzar recálculo después de eliminar
         for work in works:
-            if work:
-                work._compute_budget_kpis()
-                work._compute_amount_available()
-                work._compute_financial_progress()
+            if work.exists():
+                try:
+                    work._compute_budget_kpis()
+                    work._compute_amount_available()
+                    work._compute_financial_progress()
+                except Exception:
+                    # Ignorar si la obra se está eliminando en cascada
+                    pass
         
         return result
 
