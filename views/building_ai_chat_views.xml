@@ -21,52 +21,11 @@
 
                     <div class="o_building_chat_ui_wrapper" style="display: flex; flex-direction: column; height: 65vh; border: 1px solid #dee2e6; border-radius: 12px; background: #f8f9fa; margin-top: 20px;">
 
-                        <!-- FIX: Área de Mensajes — kanban forzado a vertical via CSS -->
-                        <div class="o_building_chat_messages_area" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column-reverse;">
-                            <field name="chat_history_ids" nolabel="1" options="{'no_open': True}">
-                                <form string="Detalle de Mensaje" create="0" edit="0">
-                                    <sheet>
-                                        <group>
-                                            <field name="role" readonly="1"/>
-                                            <field name="content" readonly="1" widget="html"/>
-                                        </group>
-                                    </sheet>
-                                </form>
-                                <kanban create="0" delete="0" edit="0" class="o_building_ai_vertical_kanban">
-                                    <field name="role"/>
-                                    <field name="content"/>
-                                    <templates>
-                                        <t t-name="card">
-                                            <!-- Burbuja Completa -->
-                                            <div t-attf-class="d-flex w-100 mb-3 #{record.role.raw_value == 'user' ? 'justify-content-end' : 'justify-content-start'}">
-
-                                                <!-- Avatar IA -->
-                                                <t t-if="record.role.raw_value != 'user'">
-                                                    <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center me-2 flex-shrink-0" style="width:36px;height:36px;font-size:14px;">
-                                                        <i class="fa fa-magic" title="IA" aria-label="IA"/>
-                                                    </div>
-                                                </t>
-
-                                                <!-- Burbuja mensaje -->
-                                                <div t-attf-class="px-3 py-2 rounded-3 shadow-sm" style="max-width:75%;word-break:break-word;" t-attf-style="
-                                                         background:#{record.role.raw_value == 'user' ? '#6366f1' : '#f8f9fa'};
-                                                         color:#{record.role.raw_value == 'user' ? 'white' : '#212529'};
-                                                         border:#{record.role.raw_value == 'user' ? 'none' : '1px solid #dee2e6'};
-                                                     ">
-                                                    <t t-esc="record.content.raw_value"/>
-                                                </div>
-
-                                                <!-- Avatar usuario -->
-                                                <t t-if="record.role.raw_value == 'user'">
-                                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center ms-2 flex-shrink-0" style="width:36px;height:36px;font-size:14px;">
-                                                        <i class="fa fa-user" title="Usuario" aria-label="Usuario"/>
-                                                    </div>
-                                                </t>
-                                            </div>
-                                        </t>
-                                    </templates>
-                                </kanban>
-                            </field>
+                        <!-- Área de Mensajes — OWL Widget vertical real -->
+                        <div class="o_building_chat_messages_area" style="flex: 1; overflow-y: auto;">
+                            <field name="chat_history_ids"
+                                   widget="building_chat_messages"
+                                   nolabel="1"/>
                         </div>
 
                         <!-- Footer con Input Area -->

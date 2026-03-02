@@ -232,6 +232,9 @@
                 <filter string="En Proceso" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
                 <filter string="Por Aprobar" name="to_approve" domain="[('state', '=', 'to_approve')]"/>
                 <filter string="Cerradas" name="done" domain="[('state', '=', 'done')]"/>
+                <group>
+                    <filter string="Obra" name="group_work" context="{'group_by': 'work_id'}"/>
+                </group>
             </search>
         </field>
     </record>
@@ -242,6 +245,7 @@
         <field name="res_model">building.work.stage</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="building_work_stage_view_search"/>
+        <field name="context">{'search_default_group_work': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Crear una nueva Etapa

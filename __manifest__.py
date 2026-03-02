@@ -65,7 +65,13 @@ Roles soportados:
     'demo': [
         'data/demo.xml',
     ],
-    'assets': {},
+    'assets': {
+        'web.assets_backend': [
+            'building_dashboard/static/src/css/chat_messages.css',
+            'building_dashboard/static/src/xml/chat_messages.xml',
+            'building_dashboard/static/src/js/chat_messages.js',
+        ],
+    },
     'installable': True,
     'application': True,
     'auto_install': False,

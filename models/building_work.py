@@ -651,15 +651,18 @@ class BuildingWork(models.Model):
         }
 
     def action_register_progress(self):
-        """Abre wizard para registrar avance en una etapa."""
+        """Abre las etapas de la obra en kanban, filtradas por esta obra."""
         self.ensure_one()
         return {
-            'name': _('Registrar Avance'),
+            'name': _('Etapas de %s') % self.name,
             'type': 'ir.actions.act_window',
             'res_model': 'building.work.stage',
-            'view_mode': 'list,form',
+            'view_mode': 'kanban,list,form',
             'domain': [('work_id', '=', self.id)],
-            'context': {'default_work_id': self.id},
+            'context': {
+                'default_work_id': self.id,
+                'search_default_work_id': self.id,
+            },
         }
 
     def action_request_purchase(self):

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="building_dashboard.ChatMessages">
+        <div class="o_building_chat_scroll">
+            <t t-foreach="mensajes" t-as="msg" t-key="msg.id">
+                <div t-attf-class="
+                    o_building_chat_row
+                    {{ msg.data.role === 'user' ? 'o_building_row_user' : 'o_building_row_ia' }}
+                ">
+                    <t t-if="msg.data.role !== 'user'">
+                        <div class="o_building_avatar o_building_avatar_ia">
+                            <i class="fa fa-magic"/>
+                        </div>
+                    </t>
+
+                    <div t-attf-class="
+                        o_building_bubble
+                        {{ msg.data.role === 'user' ? 'o_building_bubble_user' : 'o_building_bubble_ia' }}
+                    ">
+                        <t t-esc="msg.data.content"/>
+                    </div>
+
+                    <t t-if="msg.data.role === 'user'">
+                        <div class="o_building_avatar o_building_avatar_user">
+                            <i class="fa fa-user"/>
+                        </div>
+                    </t>
+                </div>
+            </t>
+            <div t-ref="messagesEnd" class="o_building_scroll_anchor"/>
+        </div>
+    </t>
+</templates>
