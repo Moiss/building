@@ -32,4 +32,8 @@ from . import work_cost
 from . import work_evidence
 # Analítica (FASE 4.4b)
 from . import account_analytic_line
+# Jornales (FASE 4.5)
+from . import building_worker_role
+from . import building_worker_inherit
+from . import building_work_jornal
 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- ============================================================= -->
+    <!-- Datos iniciales: Roles de Obra (FASE 4.5: Jornales)           -->
+    <!-- noupdate=1: solo se cargan al instalar, no al actualizar      -->
+    <!-- ============================================================= -->
+
+    <record id="role_oficial" model="building.worker.role">
+        <field name="name">Oficial</field>
+    </record>
+
+    <record id="role_albanil" model="building.worker.role">
+        <field name="name">Albañil</field>
+    </record>
+
+    <record id="role_peon" model="building.worker.role">
+        <field name="name">Peón</field>
+    </record>
+
+    <record id="role_pintor" model="building.worker.role">
+        <field name="name">Pintor</field>
+    </record>
+
+    <record id="role_electricista" model="building.worker.role">
+        <field name="name">Electricista</field>
+    </record>
+
+    <record id="role_plomero" model="building.worker.role">
+        <field name="name">Plomero</field>
+    </record>
+
+</odoo>

@@ -17,7 +17,11 @@
     <!-- Submenú: Facturas -> Obras -->
     <menuitem id="menu_bill_allocations" name="Facturas → Obras" parent="building_menu_root" action="action_building_bill_allocation" sequence="25"/>
 
-
+    <!-- Submenú: Jornales (FASE 4.5) -->
+    <menuitem id="building_menu_jornales" name="Jornales" parent="building_menu_root" sequence="30"/>
+    <menuitem id="building_menu_jornal_list" name="Registrar Jornal" parent="building_menu_jornales" action="action_building_jornal" sequence="10"/>
+    <menuitem id="building_menu_workers" name="Trabajadores de Obra" parent="building_menu_jornales" action="action_building_worker" sequence="20"/>
+    <menuitem id="building_menu_roles" name="Roles de Obra" parent="building_menu_jornales" action="action_building_worker_role" sequence="30"/>
 
     <!-- Submenú: Configuración (Contenedor) -->
     <menuitem id="building_menu_config" name="Configuración" parent="building_menu_root" sequence="100"/>

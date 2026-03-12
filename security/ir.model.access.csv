@@ -84,4 +84,13 @@ access_building_ai_chat_message_director,building.ai.chat.message.director,model
 access_building_ai_service_user,building.ai.service.user,model_building_ai_service,building_dashboard.group_building_accounting,1,1,1,0
 access_building_ai_service_admin,building.ai.service.admin,model_building_ai_service,building_dashboard.group_building_admin,1,1,1,1
 access_building_ai_service_director,building.ai.service.director,model_building_ai_service,building_dashboard.group_building_director,1,1,1,1
+access_building_worker_role_user,building.worker.role.user,model_building_worker_role,group_building_accounting,1,0,0,0
+access_building_worker_role_admin,building.worker.role.admin,model_building_worker_role,group_building_admin,1,1,1,1
+access_building_worker_role_director,building.worker.role.director,model_building_worker_role,group_building_director,1,1,1,1
+access_building_jornal_user,building.jornal.user,model_building_jornal,group_building_accounting,1,0,0,0
+access_building_jornal_admin,building.jornal.admin,model_building_jornal,group_building_admin,1,1,1,1
+access_building_jornal_director,building.jornal.director,model_building_jornal,group_building_director,1,1,1,1
+access_building_jornal_line_user,building.jornal.line.user,model_building_jornal_line,group_building_accounting,1,0,0,0
+access_building_jornal_line_admin,building.jornal.line.admin,model_building_jornal_line,group_building_admin,1,1,1,1
+access_building_jornal_line_director,building.jornal.line.director,model_building_jornal_line,group_building_director,1,1,1,1
 
