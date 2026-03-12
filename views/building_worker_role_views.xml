@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- VISTAS - Catalogo de Roles de Obra (FASE 4.5: Jornales)       -->
+    <!-- ============================================================= -->
+
+    <!-- === FORMULARIO === -->
+    <record id="view_building_worker_role_form" model="ir.ui.view">
+        <field name="name">building.worker.role.form</field>
+        <field name="model">building.worker.role</field>
+        <field name="arch" type="xml">
+            <form string="Rol de Obra">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- === LISTA === -->
+    <record id="view_building_worker_role_list" model="ir.ui.view">
+        <field name="name">building.worker.role.list</field>
+        <field name="model">building.worker.role</field>
+        <field name="arch" type="xml">
+            <list string="Roles de Obra" editable="bottom">
+                <field name="name"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- === ACCION === -->
+    <record id="action_building_worker_role" model="ir.actions.act_window">
+        <field name="name">Roles de Obra</field>
+        <field name="res_model">building.worker.role</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Agregue roles de obra (Carpintero, Soldador, etc.)
+            </p>
+            <p>
+                Los roles iniciales (Oficial, Albanil, Peon, Pintor,
+                Electricista, Plomero) se cargan automaticamente.
+            </p>
+        </field>
+    </record>
+
+</odoo>

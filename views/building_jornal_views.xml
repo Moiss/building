@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================= -->
+    <!-- VISTAS - Jornales Semanales (FASE 4.5: Mano de Obra)          -->
+    <!-- ============================================================= -->
+
+    <!-- === FORMULARIO === -->
+    <record id="view_building_jornal_form" model="ir.ui.view">
+        <field name="name">building.jornal.form</field>
+        <field name="model">building.jornal</field>
+        <field name="arch" type="xml">
+            <form string="Jornal Semanal">
+                <!-- Barra de estado -->
+                <header>
+                    <button name="action_confirmar" string="Confirmar"
+                            type="object" class="btn-primary"
+                            invisible="state != 'borrador'"/>
+                    <button name="action_borrador" string="Regresar a Borrador"
+                            type="object"
+                            invisible="state != 'confirmado'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="borrador,confirmado"/>
+                </header>
+
+                <sheet>
+                    <!-- KPI: Total del Jornal -->
+                    <div class="row mb-3 mt-2">
+                        <div class="col-6">
+                            <div style="padding: 12px 20px; background: #FEF3C7; border-radius: 8px; border-left: 4px solid #F59E0B;">
+                                <small class="text-muted d-block">Total Mano de Obra (con cargas)</small>
+                                <h3 style="margin: 0; color: #D97706;">
+                                    <field name="total_jornal" widget="monetary"/>
+                                </h3>
+                                <field name="currency_id" invisible="1"/>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div style="padding: 12px 20px; background: #EEF2FF; border-radius: 8px; border-left: 4px solid #6366F1;">
+                                <small class="text-muted d-block">Dias Pagados</small>
+                                <h4 style="margin: 0; color: #4338CA;">
+                                    <field name="dias_pagados" readonly="state == 'confirmado'"/>
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div style="padding: 12px 20px; background: #F0FDF4; border-radius: 8px; border-left: 4px solid #22C55E;">
+                                <small class="text-muted d-block">Factor Carga Social</small>
+                                <h4 style="margin: 0; color: #16A34A;">
+                                    <field name="factor_carga_social" readonly="state == 'confirmado'"/>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datos principales -->
+                    <group>
+                        <group string="Datos del Jornal">
+                            <field name="work_id" readonly="state == 'confirmado'"/>
+                            <field name="stage_id" domain="[('work_id', '=', work_id)]"
+                                   readonly="state == 'confirmado'"/>
+                            <field name="fecha_semana" readonly="state == 'confirmado'"/>
+                            <field name="fecha_semana_fin"/>
+                            <field name="numero_semana"/>
+                        </group>
+                        <group string="Vinculacion">
+                            <field name="real_line_id"
+                                   domain="[('work_id', '=', work_id)]"
+                                   readonly="state == 'confirmado'"/>
+                        </group>
+                    </group>
+
+                    <!-- Lineas de trabajadores (One2many editable) -->
+                    <separator string="Trabajadores de la Semana"/>
+                    <field name="line_ids" readonly="state == 'confirmado'">
+                        <list editable="bottom">
+                            <field name="worker_id"/>
+                            <field name="rol_obra_id" width="100px"/>
+                            <field name="jornal_base" string="Base/Dia"/>
+                            <field name="dias_trabajados" string="Dias Trab."/>
+                            <field name="costo_directo" string="Costo Directo"/>
+                            <field name="costo_real" string="Costo Real" sum="Total"/>
+                            <field name="notes" optional="hide"/>
+                        </list>
+                    </field>
+
+                    <!-- Notas -->
+                    <notebook>
+                        <page string="Observaciones" name="notes">
+                            <field name="notes" placeholder="Notas de la semana: clima, retrasos, incidencias..."
+                                   readonly="state == 'confirmado'"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- === LISTA === -->
+    <record id="view_building_jornal_list" model="ir.ui.view">
+        <field name="name">building.jornal.list</field>
+        <field name="model">building.jornal</field>
+        <field name="arch" type="xml">
+            <list string="Jornales" decoration-muted="state == 'confirmado'">
+                <field name="numero_semana" string="Sem."/>
+                <field name="fecha_semana"/>
+                <field name="fecha_semana_fin"/>
+                <field name="name"/>
+                <field name="work_id" column_invisible="context.get('default_work_id')"/>
+                <field name="stage_id"/>
+                <field name="dias_pagados"/>
+                <field name="factor_carga_social" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'borrador'"
+                       decoration-success="state == 'confirmado'"/>
+                <field name="total_jornal" sum="Total" string="Total Jornal"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- === BUSQUEDA === -->
+    <record id="view_building_jornal_search" model="ir.ui.view">
+        <field name="name">building.jornal.search</field>
+        <field name="model">building.jornal</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Jornales">
+                <field name="work_id"/>
+                <field name="stage_id"/>
+                <field name="fecha_semana"/>
+                <separator/>
+                <filter string="Borrador" name="borrador" domain="[('state', '=', 'borrador')]"/>
+                <filter string="Confirmado" name="confirmado" domain="[('state', '=', 'confirmado')]"/>
+                <separator/>
+                <filter string="Este Mes" name="this_month"
+                        domain="[('fecha_semana', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter string="Obra" name="grp_work" context="{'group_by': 'work_id'}"/>
+                <filter string="Etapa" name="grp_stage" context="{'group_by': 'stage_id'}"/>
+                <filter string="Mes" name="grp_month" context="{'group_by': 'fecha_semana:month'}"/>
+                <filter string="Estado" name="grp_state" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- === ACCION === -->
+    <record id="action_building_jornal" model="ir.actions.act_window">
+        <field name="name">Jornales</field>
+        <field name="res_model">building.jornal</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_building_jornal_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Registre los jornales semanales de mano de obra.
+            </p>
+            <p>
+                Cada jornal representa una semana de trabajo en una obra,
+                con el detalle de cada trabajador y su costo real
+                incluyendo cargas sociales (IMSS, Infonavit, etc.).
+            </p>
+        </field>
+    </record>
+
+</odoo>

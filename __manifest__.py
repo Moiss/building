@@ -34,6 +34,7 @@ Roles soportados:
         'web',
         'account',
         'analytic',
+        'hr',
     ],
     'data': [
         # Seguridad (primero)
@@ -57,6 +58,10 @@ Roles soportados:
         'views/building_real_line_views.xml',        # FASE 3.4: Gastos Reales
         'views/work_cost_views.xml',                 # FASE 4.1: Costos Operativos
         'views/work_evidence_views.xml',             # FASE 4.2: Evidencias
+        'data/building_worker_role_data.xml',          # FASE 4.5: Datos iniciales roles
+        'views/building_worker_role_views.xml',      # FASE 4.5: Roles de Obra
+        'views/building_worker_views.xml',           # FASE 4.5: Trabajadores (hr.employee)
+        'views/building_jornal_views.xml',           # FASE 4.5: Jornales
         'views/building_ai_chat_views.xml',
         'views/menus.xml',
         'views/res_config_settings_views.xml',
