@@ -9,6 +9,7 @@ class BuildingRealLine(models.Model):
     """
     _name = 'building.real.line'
     _description = 'Línea de Gasto Real'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'date desc, id desc'
 
     work_id = fields.Many2one(
@@ -117,10 +118,41 @@ class BuildingRealLine(models.Model):
         readonly=True
     )
 
-    migrated_by = fields.Many2one(
+    # === FLUJO DE APROBACIÓN (ETAPA 5.2) ===
+
+    approval_state = fields.Selection(
+        selection=[
+            ('draft', 'Borrador'),
+            ('submitted', 'En Revisión'),
+            ('approved', 'Aprobado'),
+            ('rejected', 'Rechazado'),
+        ],
+        string='Estado Aprobación',
+        default='draft',
+        required=True,
+        tracking=True,
+        help='Flujo: Borrador → En Revisión → Aprobado / Rechazado',
+    )
+
+    approval_date = fields.Datetime(
+        string='Fecha Aprobación',
+        readonly=True,
+        copy=False,
+        help='Fecha en que fue aprobado o rechazado.',
+    )
+
+    approved_by = fields.Many2one(
         'res.users',
-        string='Migrado por',
-        readonly=True
+        string='Aprobado Por',
+        readonly=True,
+        copy=False,
+        help='Usuario que aprobó o rechazó el gasto.',
+    )
+
+    rejection_reason = fields.Text(
+        string='Motivo de Rechazo',
+        copy=False,
+        help='Explicación del supervisor al rechazar el gasto.',
     )
 
     # === COMPUTE METHODS ===
@@ -198,3 +230,89 @@ class BuildingRealLine(models.Model):
         for work in works:
             self.env['building.alert.engine'].rebuild_alerts(work.id)
         return result
+
+    # === FLUJO DE APROBACIÓN (ETAPA 5.2) ===
+
+    def _check_approval_rights(self):
+        """Solo Director o Administrador de Obra pueden aprobar / rechazar."""
+        if not (
+            self.env.user.has_group('building_dashboard.group_building_director') or
+            self.env.user.has_group('building_dashboard.group_building_manager')
+        ):
+            raise UserError(_(
+                'Solo el Director o el Administrador de Obra puede aprobar o rechazar gastos.'
+            ))
+
+    def action_submit(self):
+        """Enviar a revisión: draft → submitted"""
+        for rec in self:
+            if rec.approval_state != 'draft':
+                raise UserError(_('Solo se pueden enviar gastos en estado Borrador.'))
+        self.write({'approval_state': 'submitted'})
+        for rec in self:
+            rec.message_post(body=_('Gasto enviado a revisión por %s.') % self.env.user.name)
+
+    def action_approve(self):
+        """Aprobar: submitted → approved"""
+        self._check_approval_rights()
+        for rec in self:
+            if rec.approval_state != 'submitted':
+                raise UserError(_('Solo se pueden aprobar gastos En Revisión.'))
+        self.write({
+            'approval_state': 'approved',
+            'approval_date': fields.Datetime.now(),
+            'approved_by': self.env.uid,
+        })
+        for rec in self:
+            rec.message_post(body=_('Gasto aprobado por %s.') % self.env.user.name)
+
+    def action_open_reject_wizard(self):
+        """Abrir wizard de rechazo para capturar el motivo."""
+        self.ensure_one()
+        self._check_approval_rights()
+        if self.approval_state != 'submitted':
+            raise UserError(_('Solo se pueden rechazar gastos En Revisión.'))
+        wizard = self.env['building.expense.reject.wizard'].create({
+            'record_id': self.id,
+            'record_model': self._name,
+        })
+        return {
+            'name': _('Rechazar Gasto'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'building.expense.reject.wizard',
+            'res_id': wizard.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
+
+    def _do_reject(self, reason):
+        """Ejecutar rechazo con motivo (llamado desde wizard)."""
+        for rec in self:
+            if rec.approval_state != 'submitted':
+                raise UserError(_('Solo se pueden rechazar gastos En Revisión.'))
+        self.write({
+            'approval_state': 'rejected',
+            'approval_date': fields.Datetime.now(),
+            'approved_by': self.env.uid,
+            'rejection_reason': reason,
+        })
+        for rec in self:
+            rec.message_post(
+                body=_('Gasto rechazado por %s. Motivo: %s') % (self.env.user.name, reason)
+            )
+
+    def action_reset_draft(self):
+        """Regresar a borrador: rejected → draft"""
+        for rec in self:
+            if rec.approval_state != 'rejected':
+                raise UserError(_('Solo se pueden regresar a borrador gastos Rechazados.'))
+        self.write({
+            'approval_state': 'draft',
+            'rejection_reason': False,
+            'approved_by': False,
+            'approval_date': False,
+        })
+        for rec in self:
+            rec.message_post(
+                body=_('Gasto regresado a Borrador por %s para corrección.') % self.env.user.name
+            )
