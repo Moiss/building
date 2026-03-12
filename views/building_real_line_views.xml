@@ -5,16 +5,22 @@
         <field name="name">building.real.line.tree</field>
         <field name="model">building.real.line</field>
         <field name="arch" type="xml">
-            <list string="Gastos Reales" multi_edit="1" editable="bottom">
+            <list string="Gastos Reales" multi_edit="1" editable="bottom"
+                  decoration-muted="approval_state == 'approved'"
+                  decoration-danger="approval_state == 'rejected'">
                 <field name="date"/>
                 <field name="work_id" optional="show" readonly="1"/>
-                <!-- Readonly en lista para evitar cambios accidentales de obra -->
                 <field name="stage_id" optional="show"/>
                 <field name="budget_line_id" options="{'no_create': True}" domain="[('work_id', '=', work_id), ('stage_id', '=?', stage_id)]"/>
                 <field name="name"/>
                 <field name="budget_amount" optional="show" widget="monetary" options="{'currency_field': 'currency_id'}"/>
                 <field name="amount" sum="Total"/>
                 <field name="difference" optional="show" widget="monetary" decoration-danger="difference &lt; 0" options="{'currency_field': 'currency_id'}"/>
+                <field name="approval_state" widget="badge"
+                       decoration-info="approval_state == 'submitted'"
+                       decoration-success="approval_state == 'approved'"
+                       decoration-danger="approval_state == 'rejected'"
+                       decoration-warning="approval_state == 'draft'"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="is_migrated" widget="boolean_toggle" readonly="1"/>
             </list>
@@ -27,26 +33,57 @@
         <field name="model">building.real.line</field>
         <field name="arch" type="xml">
             <form string="Gasto Real">
+                <header>
+                    <button name="action_submit" string="Enviar a Aprobación"
+                            type="object" class="btn-primary"
+                            invisible="approval_state != 'draft'"/>
+                    <button name="action_approve" string="Aprobar"
+                            type="object" class="btn-success"
+                            invisible="approval_state != 'submitted'"/>
+                    <button name="action_open_reject_wizard" string="Rechazar"
+                            type="object" class="btn-danger"
+                            invisible="approval_state != 'submitted'"/>
+                    <button name="action_reset_draft" string="Regresar a Borrador"
+                            type="object"
+                            invisible="approval_state != 'rejected'"/>
+                    <field name="approval_state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <field name="name" placeholder="Concepto del Gasto"/>
+                            <field name="name" placeholder="Concepto del Gasto"
+                                   readonly="approval_state != 'draft'"/>
                         </h1>
                     </div>
                     <group>
                         <group>
-                            <field name="work_id"/>
-                            <field name="stage_id"/>
-                            <field name="budget_line_id" domain="[('work_id', '=', work_id), ('stage_id', '=?', stage_id)]"/>
+                            <field name="work_id" readonly="approval_state != 'draft'"/>
+                            <field name="stage_id" readonly="approval_state != 'draft'"/>
+                            <field name="budget_line_id" domain="[('work_id', '=', work_id), ('stage_id', '=?', stage_id)]"
+                                   readonly="approval_state != 'draft'"/>
                         </group>
                         <group>
-                            <field name="date"/>
+                            <field name="date" readonly="approval_state != 'draft'"/>
                             <field name="budget_amount" widget="monetary"/>
-                            <field name="amount" widget="monetary"/>
+                            <field name="amount" widget="monetary" readonly="approval_state != 'draft'"/>
                             <field name="difference" widget="monetary" decoration-danger="difference &lt; 0"/>
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
+
+                    <!-- Motivo de Rechazo (visible solo si fue rechazado) -->
+                    <group string="Motivo de Rechazo" invisible="approval_state != 'rejected'">
+                        <field name="rejection_reason" nolabel="1" readonly="1"/>
+                    </group>
+
+                    <!-- Datos de aprobación -->
+                    <group string="Información de Aprobación"
+                           invisible="approval_state not in ('approved', 'rejected')">
+                        <field name="approved_by" readonly="1"/>
+                        <field name="approval_date" readonly="1"/>
+                    </group>
+
                     <group string="Información de Migración" invisible="not is_migrated">
                         <field name="is_migrated" readonly="1"/>
                         <field name="migrated_move_id" readonly="1"/>
@@ -54,6 +91,7 @@
                         <field name="migrated_by" readonly="1"/>
                     </group>
                 </sheet>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -68,7 +106,16 @@
                 <field name="name"/>
                 <field name="work_id"/>
                 <field name="budget_line_id"/>
+                <separator/>
+                <filter string="Borrador" name="draft" domain="[('approval_state', '=', 'draft')]"/>
+                <filter string="En Revisión" name="submitted" domain="[('approval_state', '=', 'submitted')]"/>
+                <filter string="Aprobado" name="approved" domain="[('approval_state', '=', 'approved')]"/>
+                <filter string="Rechazado" name="rejected" domain="[('approval_state', '=', 'rejected')]"/>
+                <separator/>
                 <filter string="No Migrados" name="not_migrated" domain="[('is_migrated', '=', False)]"/>
+                <separator/>
+                <filter string="Obra" name="grp_work" context="{'group_by': 'work_id'}"/>
+                <filter string="Estado" name="grp_state" context="{'group_by': 'approval_state'}"/>
             </search>
         </field>
     </record>

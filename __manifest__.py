@@ -62,6 +62,7 @@ Roles soportados:
         'views/building_worker_role_views.xml',      # FASE 4.5: Roles de Obra
         'views/building_worker_views.xml',           # FASE 4.5: Trabajadores (hr.employee)
         'views/building_jornal_views.xml',           # FASE 4.5: Jornales
+        'views/building_expense_reject_wizard_views.xml',  # FASE 5.2: Wizard rechazo
         'views/building_ai_chat_views.xml',
         'views/menus.xml',
         'views/res_config_settings_views.xml',

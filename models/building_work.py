@@ -331,12 +331,15 @@ class BuildingWork(models.Model):
             available = work.budget_total - work.amount_committed - work.amount_paid
             work.amount_available = max(0.0, available)
 
-    @api.depends('real_source', 'real_line_ids.amount')
+    @api.depends('real_source', 'real_line_ids.amount', 'real_line_ids.approval_state')
     def _compute_amount_paid(self):
-        """Calcula el monto pagado (KPI) según la fuente configurada."""
+        """Calcula el monto pagado (KPI) — solo gastos aprobados (Etapa 5.2)."""
         for work in self:
             if work.real_source == 'internal':
-                work.amount_paid = sum(work.real_line_ids.mapped('amount'))
+                approved = work.real_line_ids.filtered(
+                    lambda l: l.approval_state == 'approved'
+                )
+                work.amount_paid = sum(approved.mapped('amount'))
             else:
                 # TODO: Integración contable
                 work.amount_paid = 0.0
@@ -465,7 +468,7 @@ class BuildingWork(models.Model):
         store=False
     )
 
-    @api.depends('cost_ids', 'cost_ids.amount', 'cost_ids.cost_type')
+    @api.depends('cost_ids', 'cost_ids.amount', 'cost_ids.cost_type', 'cost_ids.approval_state')
     def _compute_cost_totals(self):
         """
         Calcula totales de costos operativos usando el Motor Financiero.

@@ -48,10 +48,11 @@ class BuildingFinancialEngine(models.AbstractModel):
         #   A) Sumar Contabilidad (account.move.line)
         #   B) Sumar Internas que NO han sido migradas y fecha < corte (caso "Solo Corte").
         
-        internal_domain = domain + []
-        
+        # Solo contar gastos aprobados en los KPIs (Etapa 5.2)
+        internal_domain = domain + [('approval_state', '=', 'approved')]
+
         if work.real_source == 'internal':
-             # Plan A puro: Todo lo interno vale
+             # Plan A puro: Todo lo interno vale (pero solo aprobados)
              pass
         else:
              # Plan B: Contabilidad Activada
@@ -107,8 +108,13 @@ class BuildingFinancialEngine(models.AbstractModel):
         # Para eficiencia, hagámoslo directo aquí similar a get_real_amounts pero agrupando por stage
         
         RealLine = self.env['building.real.line']
-        real_domain = [('work_id', '=', work.id), ('stage_id', 'in', stages.ids)]
-        
+        # Solo gastos aprobados impactan los KPIs (Etapa 5.2)
+        real_domain = [
+            ('work_id', '=', work.id),
+            ('stage_id', 'in', stages.ids),
+            ('approval_state', '=', 'approved'),
+        ]
+
         # Lógica de fuente (copiada de get_real_amounts simplificada)
         if work.real_source == 'accounting':
              real_domain.append(('is_migrated', '=', False))
@@ -191,7 +197,8 @@ class BuildingFinancialEngine(models.AbstractModel):
             }
 
         CostObj = self.env['building.work.cost']
-        domain = [('work_id', 'in', work_ids)]
+        # Solo costos aprobados impactan los KPIs (Etapa 5.2)
+        domain = [('work_id', 'in', work_ids), ('approval_state', '=', 'approved')]
 
         # 1. Agrupar montos por work_id + cost_type usando _read_group (Odoo 19)
         groups = CostObj._read_group(

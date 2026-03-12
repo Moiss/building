@@ -36,4 +36,6 @@ from . import account_analytic_line
 from . import building_worker_role
 from . import building_worker_inherit
 from . import building_work_jornal
+# Flujo de Aprobación (FASE 5.2)
+from . import building_expense_reject_wizard
 

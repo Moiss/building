@@ -13,6 +13,22 @@
         <field name="model">building.work.cost</field>
         <field name="arch" type="xml">
             <form string="Gasto Adicional">
+                <header>
+                    <button name="action_submit" string="Enviar a Aprobación"
+                            type="object" class="btn-primary"
+                            invisible="approval_state != 'draft'"/>
+                    <button name="action_approve" string="Aprobar"
+                            type="object" class="btn-success"
+                            invisible="approval_state != 'submitted'"/>
+                    <button name="action_open_reject_wizard" string="Rechazar"
+                            type="object" class="btn-danger"
+                            invisible="approval_state != 'submitted'"/>
+                    <button name="action_reset_draft" string="Regresar a Borrador"
+                            type="object"
+                            invisible="approval_state != 'rejected'"/>
+                    <field name="approval_state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved"/>
+                </header>
                 <sheet>
                     <div name="button_box" class="oe_button_box">
                         <button name="action_view_evidences" type="object" class="oe_stat_button" icon="fa-camera">
@@ -76,6 +92,18 @@
                         </div>
                     </group>
 
+                    <!-- Motivo de Rechazo -->
+                    <group string="Motivo de Rechazo" invisible="approval_state != 'rejected'">
+                        <field name="rejection_reason" nolabel="1" readonly="1"/>
+                    </group>
+
+                    <!-- Datos de aprobación -->
+                    <group string="Información de Aprobación"
+                           invisible="approval_state not in ('approved', 'rejected')">
+                        <field name="approved_by" readonly="1"/>
+                        <field name="approval_date" readonly="1"/>
+                    </group>
+
                     <!-- Notebook: Notas -->
                     <notebook>
                         <page string="Notas" name="notes">
@@ -101,7 +129,9 @@
         <field name="name">building.work.cost.list</field>
         <field name="model">building.work.cost</field>
         <field name="arch" type="xml">
-            <list string="Gastos Adicionales">
+            <list string="Gastos Adicionales"
+                  decoration-muted="approval_state == 'approved'"
+                  decoration-danger="approval_state == 'rejected'">
                 <field name="date"/>
                 <field name="name"/>
                 <field name="work_id" column_invisible="context.get('default_work_id')"/>
@@ -110,6 +140,11 @@
                 <field name="qty"/>
                 <field name="unit_cost" optional="hide"/>
                 <field name="amount" sum="Total"/>
+                <field name="approval_state" widget="badge"
+                       decoration-info="approval_state == 'submitted'"
+                       decoration-success="approval_state == 'approved'"
+                       decoration-danger="approval_state == 'rejected'"
+                       decoration-warning="approval_state == 'draft'"/>
                 <field name="budget_line_id" optional="hide"/>
                 <field name="currency_id" column_invisible="1"/>
             </list>
@@ -129,11 +164,17 @@
                 <field name="product_id"/>
                 <field name="budget_line_id"/>
                 <separator/>
+                <filter string="Borrador" name="draft" domain="[('approval_state', '=', 'draft')]"/>
+                <filter string="En Revisión" name="submitted" domain="[('approval_state', '=', 'submitted')]"/>
+                <filter string="Aprobado" name="approved" domain="[('approval_state', '=', 'approved')]"/>
+                <filter string="Rechazado" name="rejected" domain="[('approval_state', '=', 'rejected')]"/>
+                <separator/>
                 <filter string="Hoy" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
                 <filter string="Este Mes" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
                 <separator/>
                 <filter string="Obra" name="grp_work" context="{'group_by': 'work_id'}"/>
                 <filter string="Etapa" name="grp_stage" context="{'group_by': 'stage_id'}"/>
+                <filter string="Estado" name="grp_state" context="{'group_by': 'approval_state'}"/>
                 <filter string="Producto" name="grp_product" context="{'group_by': 'product_id'}"/>
                 <filter string="Fecha" name="grp_date" context="{'group_by': 'date:month'}"/>
             </search>
